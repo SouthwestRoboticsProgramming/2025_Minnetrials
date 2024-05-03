@@ -1,11 +1,10 @@
 package com.swrobotics.robot.subsystems.swerve;
 
-import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTInteger;
+import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.utils.MathUtil;
 import com.swrobotics.robot.logging.FieldView;
-import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
 import com.swrobotics.robot.subsystems.tagtracker.TagTrackerInput;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
@@ -22,12 +21,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public final class SwerveEstimator {
-    //private static final double[] STATE_STD_DEVS = {0.003, 0.003, 0.0002};
-    private static final double[] STATE_STD_DEVS = {0.005, 0.005, 0.001};
-    private static final double HISTORY_TIME = 0.3;
-
-    private static final double INITIAL_ANGLE_STDDEV = 0.2; // Really trust it for beginning of match
-
     private final TagTrackerInput tagTracker;
 
     private Pose2d basePose, latestPose;
@@ -36,19 +29,11 @@ public final class SwerveEstimator {
 
     private boolean ignoreVision;
 
-    private final NTInteger numberOfVisionUpdates = new NTInteger("Debug/Number of Vision Updates", 0);
-    private final NTBoolean seenWhereWeAre = new NTBoolean("Debug/Has Seen Where We Are", false);
-
-    public SwerveEstimator(FieldInfo field) {
+    public SwerveEstimator() {
         double halfFrameL = 0.77 / 2;
         double halfFrameW = 0.695 / 2;
 
-        CameraCaptureProperties captureProps = new CameraCaptureProperties()
-                .setExposure(20);
-
         tagTracker = new TagTrackerInput(
-                field,
-
                 new TagTrackerInput.CameraInfo(
                         "front",
                         (camPose) -> {
@@ -60,7 +45,7 @@ public final class SwerveEstimator {
                                     // Compensate for mounting position
                                     .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.046, -halfFrameW + 0.12, 0.19).unaryMinus(), new Rotation3d()));
                         },
-                        captureProps,
+                        Constants.kVisionCaptureProps,
                         5), // meters
 
                 new TagTrackerInput.CameraInfo(
@@ -72,7 +57,7 @@ public final class SwerveEstimator {
                                     // Compensate for mounting position
                                     .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.16, halfFrameW - 0.133, 0.39).unaryMinus(), new Rotation3d()));
                         },
-                        captureProps,
+                        Constants.kVisionCaptureProps,
                         Double.POSITIVE_INFINITY) // Trust at all distances
         );
 
@@ -81,12 +66,14 @@ public final class SwerveEstimator {
 
         q = new Matrix<>(Nat.N3(), Nat.N1());
         for (int i = 0; i < 3; i++) {
-            q.set(i, 0, MathUtil.square(STATE_STD_DEVS[i]));
+            q.set(i, 0, MathUtil.square(Constants.kVisionStateStdDevs[i]));
         }
 
         qWithMoreTrustAngle = new Matrix<>(Nat.N3(), Nat.N1());
         for (int i = 0; i < 3; i++) {
-            qWithMoreTrustAngle.set(i, 0, MathUtil.square(i == 2 ? INITIAL_ANGLE_STDDEV : STATE_STD_DEVS[i]));
+            qWithMoreTrustAngle.set(i, 0, MathUtil.square(i == 2
+                    ? Constants.kVisionInitialAngleStdDev
+                    : Constants.kVisionStateStdDevs[i]));
         }
 
         ignoreVision = false;
@@ -116,7 +103,7 @@ public final class SwerveEstimator {
                 enabledTimestamp = Timer.getFPGATimestamp();
             }
 
-            if (Timer.getFPGATimestamp() - enabledTimestamp < 5) {
+            if (Timer.getFPGATimestamp() - enabledTimestamp < Constants.kVisionInitialTrustTime) {
                 trustTurnMore = true;
             }
         } else {
@@ -127,9 +114,6 @@ public final class SwerveEstimator {
         // to be the most recent update
         List<TagTrackerInput.VisionUpdate> visionData = tagTracker.getNewUpdates();
         updates.put(Timer.getFPGATimestamp(), new PoseUpdate(driveTwist, new ArrayList<>()));
-
-        numberOfVisionUpdates.set(numberOfVisionUpdates.get() + visionData.size());
-        seenWhereWeAre.set(hasSeenWhereWeAre());
 
         List<Pose2d> tagPoses = new ArrayList<>();
         for (Pose3d tagPose3d : tagTracker.getEnvironment().getAllPoses()) {
@@ -180,7 +164,7 @@ public final class SwerveEstimator {
     private void update(boolean trustTurnMore) {
         Matrix<N3, N1> selectedQ = trustTurnMore ? qWithMoreTrustAngle : q;
 
-        while (updates.size() > 1 && updates.firstKey() < Timer.getFPGATimestamp() - HISTORY_TIME) {
+        while (updates.size() > 1 && updates.firstKey() < Timer.getFPGATimestamp() - Constants.kVisionHistoryTime) {
             Map.Entry<Double, PoseUpdate> update = updates.pollFirstEntry();
             basePose = update.getValue().apply(basePose, selectedQ);
         }
@@ -243,10 +227,5 @@ public final class SwerveEstimator {
 
             return pose;
         }
-    }
-
-    public boolean hasSeenWhereWeAre() {
-        // 1 second of frames from both cameras
-        return numberOfVisionUpdates.get() > 100;
     }
 }

@@ -3,7 +3,6 @@ package com.swrobotics.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.robot.commands.PlaySongCommand;
 import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.control.ControlBoard;
@@ -46,7 +45,7 @@ public class RobotContainer {
 
         pdp = new PowerDistribution(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
 
-        drive = new SwerveDrive(FieldInfo.CRESCENDO_2024);
+        drive = new SwerveDrive();
 
         // ControlBoard must be initialized last
         lights = new LightsSubsystem(this);

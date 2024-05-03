@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-public class Robot extends TimedRobot {
+public final class Robot extends TimedRobot {
     private Command autonomousCommand;
     private final Timer autonomousTimer = new Timer();
     private double autonomousDelay;

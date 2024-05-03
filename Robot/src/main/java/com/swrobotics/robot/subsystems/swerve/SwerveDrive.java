@@ -5,7 +5,6 @@ import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.logging.FieldView;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -33,15 +32,11 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import static com.swrobotics.robot.subsystems.swerve.SwerveConstants.SWERVE_MODULE_BUILDER;
-
 public final class SwerveDrive extends SubsystemBase {
     private static final NTBoolean CALIBRATE_OFFSETS = new NTBoolean("Drive/Modules/Calibrate", false);
 
     public static final int DRIVER_PRIORITY = 0;
     public static final int AUTO_PRIORITY = 1;
-    public static final int SNAP_PRIORITY = 2;
-    public static final int AIM_PRIORITY = 3;
 
     // Priority should be one of the priority levels above
     public static record DriveRequest(int priority, Translation2d robotRelTranslation, DriveRequestType type) {
@@ -52,8 +47,6 @@ public final class SwerveDrive extends SubsystemBase {
 
     private static final DriveRequest NULL_DRIVE = new DriveRequest(Integer.MIN_VALUE, new Translation2d(0, 0), DriveRequestType.OpenLoopVoltage);
     private static final TurnRequest NULL_TURN = new TurnRequest(Integer.MIN_VALUE, new Rotation2d(0));
-
-    private final FieldInfo fieldInfo;
 
     private final AHRS gyro;
     private final SwerveModule[] modules;
@@ -67,8 +60,7 @@ public final class SwerveDrive extends SubsystemBase {
     private TurnRequest currentTurnRequest;
     private int lastSelectedPriority;
 
-    public SwerveDrive(FieldInfo fieldInfo) {
-        this.fieldInfo = fieldInfo;
+    public SwerveDrive() {
         gyro = new AHRS(SPI.Port.kMXP);
 
         SwerveModule.Info[] infos = Constants.kSwerveModuleInfos;
@@ -78,7 +70,7 @@ public final class SwerveDrive extends SubsystemBase {
         for (int i = 0; i < modules.length; i++) {
             SwerveModule.Info info = infos[i];
 
-            SwerveModuleConstants moduleConstants = SWERVE_MODULE_BUILDER.createModuleConstants(
+            SwerveModuleConstants moduleConstants = Constants.kSwerveConstantsFactory.createModuleConstants(
                     info.turnId(), info.driveId(), info.encoderId(),
                     info.offset().get(),
                     info.position().getX(), info.position().getY(),
@@ -89,7 +81,7 @@ public final class SwerveDrive extends SubsystemBase {
         }
 
         this.kinematics = new SwerveKinematics(positions, Constants.kMaxAchievableSpeed);
-        this.estimator = new SwerveEstimator(fieldInfo);
+        this.estimator = new SwerveEstimator();
 
         prevPositions = null;
         currentDriveRequest = NULL_DRIVE;
@@ -103,7 +95,7 @@ public final class SwerveDrive extends SubsystemBase {
                 (speeds) ->
                     driveAndTurn(AUTO_PRIORITY, speeds, DriveRequestType.Velocity),
                 new HolonomicPathFollowerConfig(
-                        new PIDConstants(8.0),
+                        new PIDConstants(Constants.kAutoDriveKp, Constants.kAutoDriveKd),
                         new PIDConstants(Constants.kAutoTurnKp.get(), Constants.kAutoTurnKd.get()),
                         Constants.kMaxAchievableSpeed,
                         Constants.kDriveRadius,
@@ -263,9 +255,5 @@ public final class SwerveDrive extends SubsystemBase {
 
     public void setEstimatorIgnoreVision(boolean ignoreVision) {
         estimator.setIgnoreVision(ignoreVision);
-    }
-
-    public boolean hasSeenWhereWeAre() {
-        return estimator.hasSeenWhereWeAre();
     }
 }

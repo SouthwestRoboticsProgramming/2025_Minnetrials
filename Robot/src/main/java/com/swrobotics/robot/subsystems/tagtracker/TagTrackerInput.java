@@ -1,6 +1,6 @@
 package com.swrobotics.robot.subsystems.tagtracker;
 
-import com.swrobotics.lib.field.FieldInfo;
+import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.utils.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -43,19 +43,10 @@ public final class TagTrackerInput {
         }
     }
 
-    private static final double AMBIGUITY_THRESHOLD = 0.9;
-    private static final double FIELD_BORDER_MARGIN = 0.5;
-    private static final double Z_MARGIN = 0.75;
-    private static final double XY_STD_DEV_COEFF = 0.01;
-    private static final double THETA_STD_DEV_COEFF = 0.01;
-
-    private final FieldInfo field;
     private final TagTrackerEnvironment environment;
     private final TagTrackerCamera[] cameras;
 
-    public TagTrackerInput(FieldInfo field, CameraInfo... infos) {
-        this.field = field;
-
+    public TagTrackerInput(CameraInfo... infos) {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("TagTracker");
         environment = new TagTrackerEnvironment(table.getDoubleArrayTopic("environment"));
 
@@ -96,9 +87,9 @@ public final class TagTrackerInput {
                     // each other (i.e. facing the tag straight on)
                     double errA = input.poseA.error;
                     double errB = input.poseB.error;
-                    if (errA < errB * AMBIGUITY_THRESHOLD)
+                    if (errA < errB * Constants.kVisionAmbiguityThreshold)
                         cameraPose = input.poseA.pose;
-                    else if (errB < errA * AMBIGUITY_THRESHOLD)
+                    else if (errB < errA * Constants.kVisionAmbiguityThreshold)
                         cameraPose = input.poseB.pose;
 
                     if (cameraPose != null)
@@ -110,11 +101,11 @@ public final class TagTrackerInput {
                 if (cameraPose == null)
                     continue;
 
-
                 // Skip frame if outside field
-                if (outOfRange(robotPose3d.getX(), -FIELD_BORDER_MARGIN, field.getWidth() + FIELD_BORDER_MARGIN)
-                    || outOfRange(robotPose3d.getY(), -FIELD_BORDER_MARGIN, field.getHeight() + FIELD_BORDER_MARGIN)
-                    || outOfRange(robotPose3d.getZ(), -Z_MARGIN, Z_MARGIN)) {
+                double borderMargin = Constants.kVisionFieldBorderMargin;
+                if (outOfRange(robotPose3d.getX(), -borderMargin, Constants.kField.getWidth() + borderMargin)
+                    || outOfRange(robotPose3d.getY(), -borderMargin, Constants.kField.getHeight() + borderMargin)
+                    || outOfRange(robotPose3d.getZ(), -Constants.kVisionZMargin, Constants.kVisionZMargin)) {
                     continue;
                 }
 
@@ -137,8 +128,8 @@ public final class TagTrackerInput {
                     continue;
 
                 // Trust farther away tags less and frames with more tags more
-                double xyStdDev = XY_STD_DEV_COEFF * MathUtil.square(avgTagDist) / tagCount;
-                double thetaStdDev = THETA_STD_DEV_COEFF * MathUtil.square(avgTagDist) / tagCount;
+                double xyStdDev = Constants.kVisionXYStdDevCoeff * MathUtil.square(avgTagDist) / tagCount;
+                double thetaStdDev = Constants.kVisionThetaStdDevCoeff * MathUtil.square(avgTagDist) / tagCount;
                 updates.add(new VisionUpdate(
                         input.timestamp, robotPose, VecBuilder.fill(xyStdDev, xyStdDev, thetaStdDev)));
             }

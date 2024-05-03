@@ -40,8 +40,8 @@ public final class ControlBoard extends SubsystemBase {
         this.robot = robot;
 
         // Passing deadband here means we don't have to deadband anywhere else
-        driver = new XboxController(0, Constants.kDeadband);
-        operator = new XboxController(1, Constants.kDeadband);
+        driver = new XboxController(Constants.kDriverControllerPort, Constants.kDeadband);
+        operator = new XboxController(Constants.kOperatorControllerPort, Constants.kDeadband);
 
         // Gyro reset buttons
         driver.start.onFalling(() -> robot.drive.setRotation(new Rotation2d()));
