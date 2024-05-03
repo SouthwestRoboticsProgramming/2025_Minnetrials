@@ -30,22 +30,23 @@ public final class Constants {
     // Drive
     private static final double kHalfSpacingX = 55.3 / 100 / 2; // m
     private static final double kHalfSpacingY = 63.0 / 100 / 2; // m
+
+    public static final NTEntry<Double> kFrontLeftOffset = new NTDouble("Drive/Modules/Front Left Offset (rot)", 0).setPersistent();
+    public static final NTEntry<Double> kFrontRightOffset = new NTDouble("Drive/Modules/Front Right Offset (rot)", 0).setPersistent();
+    public static final NTEntry<Double> kBackLeftOffset = new NTDouble("Drive/Modules/Back Left Offset (rot)", 0).setPersistent();
+    public static final NTEntry<Double> kBackRightOffset = new NTDouble("Drive/Modules/Back Right Offset (rot)", 0).setPersistent();
     public static final SwerveModule.Info[] kSwerveModuleInfos = {
             new SwerveModule.Info(IOAllocation.CAN.SWERVE_FL, kHalfSpacingX, kHalfSpacingY, Constants.kFrontLeftOffset, "Front Left"),
             new SwerveModule.Info(IOAllocation.CAN.SWERVE_FR, kHalfSpacingX, -kHalfSpacingY, Constants.kFrontRightOffset, "Front Right"),
             new SwerveModule.Info(IOAllocation.CAN.SWERVE_BL, -kHalfSpacingX, kHalfSpacingY, Constants.kBackLeftOffset, "Back Left"),
             new SwerveModule.Info(IOAllocation.CAN.SWERVE_BR, -kHalfSpacingX, -kHalfSpacingY, Constants.kBackRightOffset, "Back Right")
     };
+
     public static final double kDriveRadius = Math.hypot(kHalfSpacingX, kHalfSpacingY);
     public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s
 
     public static final double kDriveCurrentLimit = 40; // A
     public static final double kDriveCurrentLimitTime = 0.25; // sec
-
-    public static final NTEntry<Double> kFrontLeftOffset = new NTDouble("Drive/Modules/Front Left Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kFrontRightOffset = new NTDouble("Drive/Modules/Front Right Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kBackLeftOffset = new NTDouble("Drive/Modules/Back Left Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kBackRightOffset = new NTDouble("Drive/Modules/Back Right Offset (rot)", 0).setPersistent();
 
     // Lights
     public static final int kLedStripLength = 22;

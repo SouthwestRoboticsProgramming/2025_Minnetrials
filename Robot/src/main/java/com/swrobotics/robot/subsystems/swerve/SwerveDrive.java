@@ -9,8 +9,6 @@ import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.logging.FieldView;
 
 import edu.wpi.first.wpilibj.DriverStation;
-import org.littletonrobotics.junction.AutoLogOutput;
-import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
@@ -86,7 +84,7 @@ public final class SwerveDrive extends SubsystemBase {
                     info.position().getX(), info.position().getY(),
                     false);
 
-            modules[i] = new SwerveModule(moduleConstants, info.name(), IOAllocation.CAN.GERALD);
+            modules[i] = new SwerveModule(moduleConstants, info.name(), info.canBus());
             positions[i] = info.position();
         }
 
@@ -114,33 +112,14 @@ public final class SwerveDrive extends SubsystemBase {
                 () -> FieldInfo.getAlliance() == DriverStation.Alliance.Red,
                 this);
 
-        PathPlannerLogging.setLogActivePathCallback(
-                (activePath) -> {
-                    Logger.recordOutput(
-                            "Drive/Trajectory", activePath.toArray(new Pose2d[0]));
-                    FieldView.pathPlannerPath.setPoses(activePath);
-                });
-        PathPlannerLogging.setLogTargetPoseCallback(
-                (targetPose) -> {
-                    Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose);
-                    FieldView.pathPlannerSetpoint.setPose(targetPose);
-                });
+        PathPlannerLogging.setLogActivePathCallback(FieldView.pathPlannerPath::setPoses);
+        PathPlannerLogging.setLogTargetPoseCallback(FieldView.pathPlannerSetpoint::setPose);
     }
 
-    @AutoLogOutput(key = "Drive/Current Swerve Module States")
     public SwerveModuleState[] getCurrentModuleStates() {
         SwerveModuleState[] states = new SwerveModuleState[modules.length];
         for (int i = 0; i < states.length; i++) {
             states[i] = modules[i].getCurrentState();
-        }
-        return states;
-    }
-
-    @AutoLogOutput(key = "Drive/Target Swerve Module States")
-    public SwerveModuleState[] getTargetModuleStates() {
-        SwerveModuleState[] states = new SwerveModuleState[modules.length];
-        for (int i = 0; i < states.length; i++) {
-            states[i] = modules[i].getTargetState();
         }
         return states;
     }
@@ -151,12 +130,6 @@ public final class SwerveDrive extends SubsystemBase {
             positions[i] = modules[i].getPosition(refresh);
         }
         return positions;
-    }
-
-    @AutoLogOutput(key = "Drive/Current Swerve Module Positions")
-    public SwerveModulePosition[] getCurrentModulePositionsForLogging() {
-        // No refresh here since it's already refreshed when we update the estimator
-        return getCurrentModulePositions(false);
     }
 
     public void driveAndTurn(int priority, ChassisSpeeds speeds, DriveRequestType type) {
@@ -220,7 +193,6 @@ public final class SwerveDrive extends SubsystemBase {
         Rotation2d gyroAngle = gyro.getRotation2d();
         if (prevPositions != null) {
             Twist2d twist = kinematics.getTwistDelta(prevPositions, positions);
-            Logger.recordOutput("Drive/Estimated Twist", twist);
 
             // We trust the gyro more than the kinematics estimate
             if (RobotBase.isReal() && gyro.isConnected()) {
@@ -233,7 +205,6 @@ public final class SwerveDrive extends SubsystemBase {
         prevGyroAngle = gyroAngle;
     }
 
-    @AutoLogOutput(key = "Pose Estimate")
     public Pose2d getEstimatedPose() {
         return estimator.getEstimatedPose();
     }
@@ -246,7 +217,6 @@ public final class SwerveDrive extends SubsystemBase {
         estimator.resetPose(new Pose2d(getEstimatedPose().getTranslation(), newRotation));
     }
 
-    @AutoLogOutput(key = "Drive/Robot Rel Velocity")
     public ChassisSpeeds getRobotRelativeSpeeds() {
         return kinematics.toChassisSpeeds(getCurrentModuleStates());
     }

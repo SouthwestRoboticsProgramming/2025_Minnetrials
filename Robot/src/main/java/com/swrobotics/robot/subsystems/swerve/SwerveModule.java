@@ -149,12 +149,13 @@ public class SwerveModule extends com.ctre.phoenix6.mechanisms.swerve.SwerveModu
 
     /** Describes settings needed to create a swerve module */
     public record Info( // Not directly used in SwerveModule but used to create the SwerveModuleConstants object
+            String canBus,
             int driveId, int turnId, int encoderId,
             Translation2d position,
             NTEntry<Double> offset,
             String name) {
         public Info(IOAllocation.SwerveIDs ids, double x, double y, NTEntry<Double> offset, String name) {
-            this(ids.drive.id(), ids.turn.id(), ids.encoder.id(),
+            this(ids.drive.bus(), ids.drive.id(), ids.turn.id(), ids.encoder.id(),
                     new Translation2d(x, y),
                     offset, name);
         }

@@ -1,22 +1,14 @@
 package com.swrobotics.robot;
 
 import com.swrobotics.lib.ThreadUtils;
-import com.swrobotics.robot.config.IOAllocation;
 
-import edu.wpi.first.wpilibj.PowerDistribution.ModuleType;
 import edu.wpi.first.wpilibj.Threads;
+import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
-import org.littletonrobotics.junction.LoggedRobot;
-import org.littletonrobotics.junction.Logger;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.BiConsumer;
-
-public class Robot extends LoggedRobot {
+public class Robot extends TimedRobot {
     private Command autonomousCommand;
     private final Timer autonomousTimer = new Timer();
     private double autonomousDelay;
@@ -26,68 +18,8 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotInit() {
-        // Set up data receivers & replay source
-//        switch (Settings.getMode()) {
-//            case REAL:
-//                String folder = Settings.logFolders.get(Settings.robot);
-//                if (folder != null) {
-//                    Logger.addDataReceiver(new WPILOGWriter(folder));
-//                }
-//                Logger.addDataReceiver(new NT4Publisher());
-//                if (Settings.robot == RobotType.COMPETITION) {
-//                    LoggedPowerDistribution.getInstance(
-//                            IOAllocation.CAN.PDP.id(), ModuleType.kRev);
-//                }
-//                break;
-//
-//            case SIMULATION:
-//                Logger.addDataReceiver(new NT4Publisher());
-//                break;
-//
-//            case REPLAY:
-//                String path = LogFileUtil.findReplayLog();
-//                Logger.setReplaySource(new WPILOGReader(path));
-//                Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_sim")));
-//                break;
-//        }
-
-        // Start AdvantageKit logger
-//        setUseTiming(Settings.getMode() != Mode.REPLAY);
-        Logger.start();
-
         // Create a RobotContainer to manage our subsystems and our buttons
         robotContainer = new RobotContainer();
-
-        // Log active commands
-        Map<String, Integer> commandCounts = new HashMap<>();
-        BiConsumer<Command, Boolean> logCommandFunction =
-                (Command command, Boolean active) -> {
-                    String name = command.getName();
-                    int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
-                    commandCounts.put(name, count);
-                    // Logger.recordOutput(
-                    //                 "CommandsUnique/"
-                    //                         + name
-                    //                         + "_"
-                    //                         + Integer.toHexString(command.hashCode()),
-                    //                 active);
-                    Logger.recordOutput("CommandsAll/" + name, count > 0);
-                };
-        CommandScheduler.getInstance()
-                .onCommandInitialize(
-                        (Command command) -> {
-                            logCommandFunction.accept(command, true);
-                        });
-        CommandScheduler.getInstance()
-                .onCommandFinish(
-                        (Command command) -> {
-                            logCommandFunction.accept(command, false);
-                        });
-        CommandScheduler.getInstance()
-                .onCommandInterrupt(
-                        (Command command) -> {
-                            logCommandFunction.accept(command, false);
-                        });
     }
 
     @Override
@@ -142,4 +74,10 @@ public class Robot extends LoggedRobot {
     public void disabledExit() {
         robotContainer.disabledExit();
     }
+
+    // Override these so WPILib doesn't print unhelpful warnings
+    @Override public void simulationPeriodic() {}
+    @Override public void disabledPeriodic() {}
+    @Override public void teleopPeriodic() {}
+    @Override public void testPeriodic() {}
 }

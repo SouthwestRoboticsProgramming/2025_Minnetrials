@@ -53,6 +53,9 @@ public final class IOAllocation {
         }
 
         public String bus() {
+            if (RobotBase.isSimulation())
+                return CAN.RIO;
+
             return bus;
         }
     }

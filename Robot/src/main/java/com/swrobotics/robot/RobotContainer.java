@@ -14,9 +14,8 @@ import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
 
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
-
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,8 +24,8 @@ import java.util.List;
 
 public class RobotContainer {
     // Create dashboard choosers
-    private final LoggedDashboardChooser<Command> autoSelector;
-    private final LoggedDashboardChooser<Double> autoDelaySelector;
+    private final SendableChooser<Command> autoSelector;
+    private final SendableChooser<Double> autoDelaySelector;
 
     public final ControlBoard controlboard;
 
@@ -60,21 +59,21 @@ public class RobotContainer {
         // Create a chooser to select the autonomous
         List<AutoEntry> autos = buildPathPlannerAutos();
         autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
-        SendableChooser<Command> autoChooser = new SendableChooser<>();
-        autoChooser.setDefaultOption("None", Commands.none());
+        autoSelector = new SendableChooser<>();
+        autoSelector.setDefaultOption("None", Commands.none());
         for (AutoEntry auto : autos)
-            autoChooser.addOption(auto.name(), auto.cmd());
-        autoSelector = new LoggedDashboardChooser<>("Auto Selection", autoChooser);
+            autoSelector.addOption(auto.name(), auto.cmd());
 
         // Create a selector to select delay before running auto
-        SendableChooser<Double> autoDelay = new SendableChooser<>();
-        autoDelay.setDefaultOption("None", 0.0);
+        autoDelaySelector = new SendableChooser<>();
+        autoDelaySelector.setDefaultOption("None", 0.0);
         for (int i = 0; i < 10; i++) {
             double time = i / 2.0 + 0.5;
-            autoDelay.addOption(time + " seconds", time);
+            autoDelaySelector.addOption(time + " seconds", time);
         }
-        autoDelaySelector = new LoggedDashboardChooser<>("Auto Delay", autoDelay);
 
+        SmartDashboard.putData("Auto Selector", autoSelector);
+        SmartDashboard.putData("Auto Delay", autoDelaySelector);
         FieldView.publish();
 
         // Play startup song
@@ -127,10 +126,10 @@ public class RobotContainer {
     }
 
     public double getAutoDelay() {
-        return autoDelaySelector.get();
+        return autoDelaySelector.getSelected();
     }
 
     public Command getAutonomousCommand() {
-        return autoSelector.get();
+        return autoSelector.getSelected();
     }
 }
