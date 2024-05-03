@@ -1,11 +1,10 @@
 package com.swrobotics.robot.subsystems.tagtracker;
 
-import com.swrobotics.robot.subsystems.tagtracker.io.NTEnvironmentIO;
-import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerEnvironmentIO;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleArrayTopic;
 
 import java.util.Collection;
@@ -13,16 +12,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class TagTrackerEnvironment {
-    private final TagTrackerEnvironmentIO io;
-    private final TagTrackerEnvironmentIO.Inputs inputs;
-
+    private final DoubleArraySubscriber sub;
     private final Map<Integer, Pose3d> poses;
+    private long lastChangeTimestamp;
 
     public TagTrackerEnvironment(DoubleArrayTopic topic) {
-        io = new NTEnvironmentIO(topic);
-        inputs = new TagTrackerEnvironmentIO.Inputs();
-
+        sub = topic.subscribe(new double[0]);
         poses = new HashMap<>();
+        lastChangeTimestamp = Long.MAX_VALUE;
     }
 
     // Returns pose if tag exists, else null
@@ -35,11 +32,12 @@ public final class TagTrackerEnvironment {
     }
 
     public void update() {
-        io.updateInputs(inputs);
-
-        if (!inputs.dataChanged)
+        long timestamp = sub.getLastChange();
+        if (timestamp == lastChangeTimestamp)
             return;
-        double[] data = inputs.packedData;
+        lastChangeTimestamp = timestamp;
+
+        double[] data = sub.get();
 
         poses.clear();
         for (int i = 0; i < data.length; i += 8) {

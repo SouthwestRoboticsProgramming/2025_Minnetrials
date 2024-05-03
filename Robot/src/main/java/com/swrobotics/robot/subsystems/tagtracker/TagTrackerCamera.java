@@ -1,9 +1,7 @@
 package com.swrobotics.robot.subsystems.tagtracker;
 
-import com.swrobotics.robot.subsystems.tagtracker.io.NTCameraIO;
-import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerCameraIO;
 import edu.wpi.first.math.geometry.*;
-import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,19 +88,34 @@ public final class TagTrackerCamera {
     private final Function<Pose3d, Pose3d> cameraToRobot;
     private final double maxTrustDistance;
 
-    private final TagTrackerCameraIO io;
-    private final TagTrackerCameraIO.Inputs inputs;
+    private final DoubleArraySubscriber posesSub;
 
-    public TagTrackerCamera(String name, NetworkTable table, Function<Pose3d, Pose3d> cameraToRobot, CameraCaptureProperties captureProps, double maxTrustDistance) {
+    private final BooleanPublisher autoExposurePub;
+    private final DoublePublisher exposurePub;
+    private final DoublePublisher gainPub;
+    private final DoublePublisher targetFpsPub;
+
+    public TagTrackerCamera(String name, NetworkTable table, Function<Pose3d, Pose3d> cameraToRobot, CameraCaptureProperties props, double maxTrustDistance) {
         this.name = name;
 //        this.toRobotTransform = toRobotTransform;
         this.cameraToRobot = cameraToRobot;
         this.maxTrustDistance = maxTrustDistance;
 
-        io = new NTCameraIO(table);
-        inputs = new TagTrackerCameraIO.Inputs();
+        posesSub = table.getSubTable("Outputs").getDoubleArrayTopic("poses").subscribe(
+                new double[]{0},
+                PubSubOption.sendAll(true),
+                PubSubOption.keepDuplicates(true));
 
-        io.setCaptureProperties(captureProps);
+        NetworkTable configTable = table.getSubTable("Config");
+        autoExposurePub = configTable.getBooleanTopic("Auto Exposure").publish();
+        exposurePub = configTable.getDoubleTopic("Exposure").publish();
+        gainPub = configTable.getDoubleTopic("Gain").publish();
+        targetFpsPub = configTable.getDoubleTopic("Target FPS").publish();
+
+        autoExposurePub.set(props.isAutoExposure());
+        exposurePub.set(props.getExposure());
+        gainPub.set(props.getGain());
+        targetFpsPub.set(props.getTargetFps());
     }
 
     public Function<Pose3d, Pose3d> getToRobotTransform() {
@@ -114,15 +127,11 @@ public final class TagTrackerCamera {
     }
 
     public List<EstimateInput> getEstimates() {
-        io.updateInputs(inputs);
+        TimestampedDoubleArray[] queuedValues = posesSub.readQueue();
 
         List<EstimateInput> estimates = new ArrayList<>();
-
-        for (int i = 0; i < inputs.timestamps.length; i++) {
-            long timestamp = inputs.timestamps[i];
-            double[] data = inputs.framePackedData[i];
-
-            EstimateInput input = EstimateInput.decode(timestamp, data);
+        for (TimestampedDoubleArray value : queuedValues) {
+            EstimateInput input = EstimateInput.decode(value.timestamp, value.value);
             if (input != null)
                 estimates.add(input);
         }
