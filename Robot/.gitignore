@@ -1,0 +1,5 @@
+hs_err_pid*
+simgui*.json
+networktables.json*
+ctre_sim/
+build/

@@ -1,0 +1,3 @@
+rootProject.name = "2025_Main_Robot"
+
+include 'Robot'
