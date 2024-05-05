@@ -172,8 +172,7 @@ public final class SwerveDrive extends SubsystemBase {
             currentTurnRequest = NULL_TURN;
 
             // Apply the drive request
-            ChassisSpeeds robotRelSpeeds = ChassisSpeeds.discretize(requestedSpeeds, 0.020);
-            SwerveModuleState[] targetStates = kinematics.getStates(robotRelSpeeds);
+            SwerveModuleState[] targetStates = kinematics.getStates(requestedSpeeds);
             for (int i = 0; i < modules.length; i++) {
                 modules[i].apply(targetStates[i], currentDriveRequest.type, SteerRequestType.MotionMagic);
             }

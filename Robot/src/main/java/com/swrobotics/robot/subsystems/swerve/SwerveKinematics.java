@@ -1,7 +1,5 @@
 package com.swrobotics.robot.subsystems.swerve;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -19,22 +17,8 @@ public final class SwerveKinematics {
     }
 
     public SwerveModuleState[] getStates(ChassisSpeeds robotRelSpeeds) {
-        final double periodicTime = 0.02;
-
-        // "Borrowed" from team 254
-        Pose2d robotPoseVel =
-                new Pose2d(
-                        robotRelSpeeds.vxMetersPerSecond * periodicTime,
-                        robotRelSpeeds.vyMetersPerSecond * periodicTime,
-                        Rotation2d.fromRadians(robotRelSpeeds.omegaRadiansPerSecond * periodicTime));
-        Twist2d twistVel = new Pose2d().log(robotPoseVel);
-        robotRelSpeeds =
-                new ChassisSpeeds(
-                        twistVel.dx / periodicTime,
-                        twistVel.dy / periodicTime,
-                        twistVel.dtheta / periodicTime);
-
-        SwerveModuleState[] states = kinematics.toSwerveModuleStates(robotRelSpeeds);
+        ChassisSpeeds discrete = ChassisSpeeds.discretize(robotRelSpeeds, 0.020);
+        SwerveModuleState[] states = kinematics.toSwerveModuleStates(discrete);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxVelocity);
 
         return states;
