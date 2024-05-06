@@ -9,6 +9,6 @@ public interface TagTrackerCameraIO {
 
     final class Inputs {
         public long[] timestamps;
-        public double[][] framePackedData;
+        public byte[][] framePackedData;
     }
 }

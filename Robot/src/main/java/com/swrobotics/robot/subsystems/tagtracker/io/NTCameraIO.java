@@ -4,7 +4,7 @@ import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
 import edu.wpi.first.networktables.*;
 
 public final class NTCameraIO implements TagTrackerCameraIO {
-    private final DoubleArraySubscriber posesSub;
+    private final RawSubscriber posesSub;
 
     private final BooleanPublisher autoExposurePub;
     private final DoublePublisher exposurePub;
@@ -12,8 +12,9 @@ public final class NTCameraIO implements TagTrackerCameraIO {
     private final DoublePublisher targetFpsPub;
 
     public NTCameraIO(NetworkTable table) {
-        posesSub = table.getSubTable("Outputs").getDoubleArrayTopic("poses").subscribe(
-                new double[]{0},
+        posesSub = table.getSubTable("Outputs").getRawTopic("poses").subscribe(
+                "raw",
+                new byte[]{0},
                 PubSubOption.sendAll(true),
                 PubSubOption.keepDuplicates(true));
 
@@ -34,9 +35,9 @@ public final class NTCameraIO implements TagTrackerCameraIO {
 
     @Override
     public void updateInputs(Inputs inputs) {
-        TimestampedDoubleArray[] data = posesSub.readQueue();
+        TimestampedRaw[] data = posesSub.readQueue();
         inputs.timestamps = new long[data.length];
-        inputs.framePackedData = new double[data.length][];
+        inputs.framePackedData = new byte[data.length][];
 
         for (int i = 0; i < data.length; i++) {
             inputs.timestamps[i] = data[i].timestamp;

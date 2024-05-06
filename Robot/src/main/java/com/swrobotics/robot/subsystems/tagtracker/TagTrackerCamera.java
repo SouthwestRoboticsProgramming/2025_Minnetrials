@@ -4,7 +4,12 @@ import com.swrobotics.robot.subsystems.tagtracker.io.NTCameraIO;
 import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerCameraIO;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.wpilibj.DriverStation;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,21 +17,21 @@ import java.util.function.Function;
 
 public final class TagTrackerCamera {
     public static final class PoseEstimate {
-        public final double error;
+        public final float error;
         public final Pose3d pose;
 
-        public PoseEstimate(double[] data, int i) {
-            error = data[i];
+        public PoseEstimate(DataInput in) throws IOException {
+            error = in.readFloat();
 
-            double tx = data[i + 1];
-            double ty = data[i + 2];
-            double tz = data[i + 3];
+            double tx = in.readDouble();
+            double ty = in.readDouble();
+            double tz = in.readDouble();
             Translation3d translation = new Translation3d(tx, ty, tz);
 
-            double qw = data[i + 4];
-            double qx = data[i + 5];
-            double qy = data[i + 6];
-            double qz = data[i + 7];
+            double qw = in.readDouble();
+            double qx = in.readDouble();
+            double qy = in.readDouble();
+            double qz = in.readDouble();
             Rotation3d rotation = new Rotation3d(new Quaternion(qw, qx, qy, qz));
 
             pose = new Pose3d(translation, rotation);
@@ -46,32 +51,76 @@ public final class TagTrackerCamera {
         public final PoseEstimate poseA;
         public final PoseEstimate poseB;
         public final int[] visibleTagIds;
+        public final Translation2d[][] visibleTagCorners;
 
-        public static EstimateInput decode(long ntTimestamp, double[] data) {
-            double timestamp = ntTimestamp / 1_000_000.0;
+        public static EstimateInput decode(long ntTimestamp, byte[] rawData) {
+            DataInput in = new DataInputStream(new ByteArrayInputStream(rawData));
+            try {
+                double timestamp = ntTimestamp / 1_000_000.0;
 
-            int count = (int) data[0];
-            if (count == 0)
-                return null;
+                boolean hasEstimate = in.readBoolean();
+                if (!hasEstimate)
+                    return null;
 
-            PoseEstimate poseA = new PoseEstimate(data, 1);
-            PoseEstimate poseB = count == 2 ? new PoseEstimate(data, 9) : null;
+                PoseEstimate poseA = new PoseEstimate(in);
+                PoseEstimate poseB = null;
+                int tagCount = 1;
+                if (in.readBoolean()) {
+                    poseB = new PoseEstimate(in);
+                    tagCount = in.readUnsignedByte();
+                }
 
-            int tagsOffset = count == 2 ? 17 : 9;
-            int[] visibleTagIds = new int[data.length - tagsOffset - 1];
-            for (int i = tagsOffset; i < data.length - 1; i++) {
-                visibleTagIds[i - tagsOffset] = (int) data[i];
+                int[] visibleTagIds = new int[tagCount];
+                Translation2d[][] visibleTagCorners = new Translation2d[tagCount][4];
+                for (int i = 0; i < tagCount; i++) {
+                    visibleTagIds[i] = in.readUnsignedByte();
+
+                    Translation2d[] cornerSet = visibleTagCorners[i];
+                    for (int j = 0; j < 4; j++) {
+                        double x = in.readUnsignedShort();
+                        double y = in.readUnsignedShort();
+                        cornerSet[j] = new Translation2d(x, y);
+                    }
+                }
+
+                double timeOffset = in.readDouble();
+                return new EstimateInput(
+                        timestamp - timeOffset,
+                        poseA, poseB,
+                        visibleTagIds,
+                        visibleTagCorners
+                );
+
+//                int count = (int) data[0];
+//                if (count == 0)
+//                    return null;
+//
+//                PoseEstimate poseA = new PoseEstimate(data, 1);
+//                PoseEstimate poseB = count == 2 ? new PoseEstimate(data, 9) : null;
+//
+//                int tagsOffset = count == 2 ? 17 : 9;
+//                int[] visibleTagIds = new int[data.length - tagsOffset - 1];
+//                for (int i = tagsOffset; i < data.length - 1; i++) {
+//                    visibleTagIds[i - tagsOffset] = (int) data[i];
+//                }
+//
+//                double timeOffset = data[data.length - 1];
+//                return new EstimateInput(timestamp - timeOffset, poseA, poseB, visibleTagIds);
+            } catch (IndexOutOfBoundsException e) {
+                DriverStation.reportWarning("TagTracker did not provide enough data!", false);
+            } catch (IOException impossible) {
+                DriverStation.reportWarning("TagTracker: Somehow an IOException appeared", false);
+                impossible.printStackTrace();
             }
-
-            double timeOffset = data[data.length - 1];
-            return new EstimateInput(timestamp - timeOffset, poseA, poseB, visibleTagIds);
+            return null;
         }
 
-        private EstimateInput(double timestamp, PoseEstimate poseA, PoseEstimate poseB, int[] visibleTagIds) {
+        private EstimateInput(double timestamp, PoseEstimate poseA, PoseEstimate poseB, int[] visibleTagIds, Translation2d[][] visibleTagCorners) {
             this.timestamp = timestamp;
             this.poseA = poseA;
             this.poseB = poseB;
             this.visibleTagIds = visibleTagIds;
+            this.visibleTagCorners = visibleTagCorners;
         }
 
         @Override
@@ -81,6 +130,7 @@ public final class TagTrackerCamera {
                     ", poseA=" + poseA +
                     ", poseB=" + poseB +
                     ", visibleTagIds=" + Arrays.toString(visibleTagIds) +
+                    ", visibleTagCorners=" + Arrays.deepToString(visibleTagCorners) +
                     '}';
         }
     }
@@ -120,12 +170,14 @@ public final class TagTrackerCamera {
 
         for (int i = 0; i < inputs.timestamps.length; i++) {
             long timestamp = inputs.timestamps[i];
-            double[] data = inputs.framePackedData[i];
+            byte[] data = inputs.framePackedData[i];
 
             EstimateInput input = EstimateInput.decode(timestamp, data);
             if (input != null)
                 estimates.add(input);
         }
+
+        System.out.println("Estimates: " + estimates);
 
         return estimates;
     }
