@@ -2,13 +2,14 @@ package com.swrobotics.robot;
 
 import com.swrobotics.lib.ThreadUtils;
 
+import com.swrobotics.robot.logging.Logging;
 import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.littletonrobotics.junction.LoggedRobot;
 
-public final class Robot extends TimedRobot {
+public final class Robot extends LoggedRobot {
     private Command autonomousCommand;
     private final Timer autonomousTimer = new Timer();
     private double autonomousDelay;
@@ -18,6 +19,8 @@ public final class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
+        Logging.initialize(RobotContainer.SIM_MODE);
+
         // Create a RobotContainer to manage our subsystems and our buttons
         robotContainer = new RobotContainer();
     }

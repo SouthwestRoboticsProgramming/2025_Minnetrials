@@ -5,6 +5,7 @@ import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerCameraIO;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.DriverStation;
+import org.littletonrobotics.junction.Logger;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -90,22 +91,6 @@ public final class TagTrackerCamera {
                         visibleTagIds,
                         visibleTagCorners
                 );
-
-//                int count = (int) data[0];
-//                if (count == 0)
-//                    return null;
-//
-//                PoseEstimate poseA = new PoseEstimate(data, 1);
-//                PoseEstimate poseB = count == 2 ? new PoseEstimate(data, 9) : null;
-//
-//                int tagsOffset = count == 2 ? 17 : 9;
-//                int[] visibleTagIds = new int[data.length - tagsOffset - 1];
-//                for (int i = tagsOffset; i < data.length - 1; i++) {
-//                    visibleTagIds[i - tagsOffset] = (int) data[i];
-//                }
-//
-//                double timeOffset = data[data.length - 1];
-//                return new EstimateInput(timestamp - timeOffset, poseA, poseB, visibleTagIds);
             } catch (IndexOutOfBoundsException e) {
                 DriverStation.reportWarning("TagTracker did not provide enough data!", false);
             } catch (IOException impossible) {
@@ -165,9 +150,11 @@ public final class TagTrackerCamera {
 
     public List<EstimateInput> getEstimates() {
         io.updateInputs(inputs);
+        Logger.processInputs("TagTracker/Camera/" + name, inputs);
 
         List<EstimateInput> estimates = new ArrayList<>();
 
+        boolean hadFrame = false;
         for (int i = 0; i < inputs.timestamps.length; i++) {
             long timestamp = inputs.timestamps[i];
             byte[] data = inputs.framePackedData[i];
@@ -175,9 +162,19 @@ public final class TagTrackerCamera {
             EstimateInput input = EstimateInput.decode(timestamp, data);
             if (input != null)
                 estimates.add(input);
+            hadFrame = true;
         }
 
-        System.out.println("Estimates: " + estimates);
+        if (hadFrame) {
+            List<Translation2d> corners = new ArrayList<>();
+            if (!estimates.isEmpty()) {
+                EstimateInput latest = estimates.get(estimates.size() - 1);
+                for (Translation2d[] cornerSet : latest.visibleTagCorners) {
+                    corners.addAll(Arrays.asList(cornerSet));
+                }
+            }
+            Logger.recordOutput("TagTracker/Camera/" + name + "/Tag Corners", corners.toArray(new Translation2d[0]));
+        }
 
         return estimates;
     }

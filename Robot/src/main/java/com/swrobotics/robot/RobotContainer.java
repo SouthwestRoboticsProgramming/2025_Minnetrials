@@ -7,14 +7,15 @@ import com.swrobotics.robot.commands.PlaySongCommand;
 import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.control.ControlBoard;
 import com.swrobotics.robot.logging.FieldView;
+import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
 import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
 
 import edu.wpi.first.wpilibj.*;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
+import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -22,20 +23,21 @@ import java.util.Comparator;
 import java.util.List;
 
 public class RobotContainer {
+    // Whether to simulate the robot or replay a log file
+    public static final Logging.SimMode SIM_MODE = Logging.SimMode.SIMULATE;
+//    public static final Logging.SimMode SIM_MODE = Logging.SimMode.REPLAY;
+
     // Create dashboard choosers
-    private final SendableChooser<Command> autoSelector;
-    private final SendableChooser<Double> autoDelaySelector;
+    private final LoggedDashboardChooser<Command> autoSelector;
+    private final LoggedDashboardChooser<Double> autoDelaySelector;
 
-    public final ControlBoard controlboard;
-
-    public final PowerDistribution pdp;
-
-    // Mechanical
+    public final LoggedPowerDistribution pdp;
     public final SwerveDrive drive;
 
-    // Fun
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
+
+    public final ControlBoard controlboard;
 
     private Command musicCommand;
 
@@ -43,13 +45,13 @@ public class RobotContainer {
         // Turn off joystick warnings in sim
         DriverStation.silenceJoystickConnectionWarning(RobotBase.isSimulation());
 
-        pdp = new PowerDistribution(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
-
+        pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
         drive = new SwerveDrive();
 
-        // ControlBoard must be initialized last
         lights = new LightsSubsystem(this);
         music = new MusicSubsystem(this);
+
+        // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);
 
         // Register Named Commands for Auto
@@ -58,21 +60,19 @@ public class RobotContainer {
         // Create a chooser to select the autonomous
         List<AutoEntry> autos = buildPathPlannerAutos();
         autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
-        autoSelector = new SendableChooser<>();
-        autoSelector.setDefaultOption("None", Commands.none());
+        autoSelector = new LoggedDashboardChooser<>("Auto Selector");
+        autoSelector.addDefaultOption("None", Commands.none());
         for (AutoEntry auto : autos)
             autoSelector.addOption(auto.name(), auto.cmd());
 
         // Create a selector to select delay before running auto
-        autoDelaySelector = new SendableChooser<>();
-        autoDelaySelector.setDefaultOption("None", 0.0);
+        autoDelaySelector = new LoggedDashboardChooser<>("Auto Delay");
+        autoDelaySelector.addDefaultOption("None", 0.0);
         for (int i = 0; i < 10; i++) {
             double time = i / 2.0 + 0.5;
             autoDelaySelector.addOption(time + " seconds", time);
         }
 
-        SmartDashboard.putData("Auto Selector", autoSelector);
-        SmartDashboard.putData("Auto Delay", autoDelaySelector);
         FieldView.publish();
 
         // Play startup song
@@ -125,10 +125,10 @@ public class RobotContainer {
     }
 
     public double getAutoDelay() {
-        return autoDelaySelector.getSelected();
+        return autoDelaySelector.get();
     }
 
     public Command getAutonomousCommand() {
-        return autoSelector.getSelected();
+        return autoSelector.get();
     }
 }
