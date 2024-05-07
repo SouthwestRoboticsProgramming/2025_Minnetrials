@@ -20,7 +20,7 @@ public final class CharacterizeWheelsCommand extends Command {
 
     @Override
     public void initialize() {
-        startingPositions = drive.getCurrentModulePositions(true);
+        startingPositions = drive.getCurrentModulePositions();
         gyroAccumulatorRad = 0;
         lastGyroRad = drive.getRawGyroRotation().getRadians();
     }
@@ -34,7 +34,7 @@ public final class CharacterizeWheelsCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        SwerveModulePosition[] endingPositions = drive.getCurrentModulePositions(true);
+        SwerveModulePosition[] endingPositions = drive.getCurrentModulePositions();
         double averageWheelDisplacement = 0;
 
         for (int i = 0; i < 4; i++) {

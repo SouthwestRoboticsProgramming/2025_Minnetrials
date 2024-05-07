@@ -57,6 +57,8 @@ public final class Constants {
     public static final double kDriveRadius = Math.hypot(kHalfSpacingX, kHalfSpacingY);
     public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s
 
+    public static final double kDriveDriftComp = 0.04; // dt for chassis speeds discretize
+
     public static final double kDriveCurrentLimit = 40; // A
     public static final double kDriveCurrentLimitTime = 0.25; // sec
 

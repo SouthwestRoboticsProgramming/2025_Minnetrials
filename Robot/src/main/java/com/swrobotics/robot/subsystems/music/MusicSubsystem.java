@@ -12,6 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class MusicSubsystem extends SubsystemBase {
+    private static MusicSubsystem instance = new MusicSubsystem();
+
+    public static MusicSubsystem getInstance() {
+        return instance;
+    }
+
     private static final String songsFolder = "music";
 
     public static List<String> getAvailableSongs() {
@@ -30,20 +36,12 @@ public final class MusicSubsystem extends SubsystemBase {
 
     private final Orchestra orchestra;
 
-    public MusicSubsystem(RobotContainer robot) {
+    public MusicSubsystem() {
         orchestra = new Orchestra();
-
-        addInstrument(robot.drive.getDriveMotor(0));
-        addInstrument(robot.drive.getDriveMotor(1));
-        addInstrument(robot.drive.getDriveMotor(2));
-        addInstrument(robot.drive.getDriveMotor(3));
-        addInstrument(robot.drive.getTurnMotor(0));
-        addInstrument(robot.drive.getTurnMotor(1));
-        addInstrument(robot.drive.getTurnMotor(2));
-        addInstrument(robot.drive.getTurnMotor(3));
+        instance = this;
     }
 
-    private void addInstrument(TalonFX fx) {
+    public void addInstrument(TalonFX fx) {
         AudioConfigs conf = new AudioConfigs();
         conf.BeepOnBoot = true;
         conf.BeepOnConfig = true;

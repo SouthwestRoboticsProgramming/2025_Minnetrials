@@ -1,5 +1,6 @@
 package com.swrobotics.robot.subsystems.swerve;
 
+import com.swrobotics.robot.config.Constants;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -17,7 +18,7 @@ public final class SwerveKinematics {
     }
 
     public SwerveModuleState[] getStates(ChassisSpeeds robotRelSpeeds) {
-        ChassisSpeeds discrete = ChassisSpeeds.discretize(robotRelSpeeds, 0.020);
+        ChassisSpeeds discrete = ChassisSpeeds.discretize(robotRelSpeeds, Constants.kDriveDriftComp);
         SwerveModuleState[] states = kinematics.toSwerveModuleStates(discrete);
         SwerveDriveKinematics.desaturateWheelSpeeds(states, maxVelocity);
 

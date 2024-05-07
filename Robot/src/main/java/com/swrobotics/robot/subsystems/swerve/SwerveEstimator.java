@@ -14,6 +14,7 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -183,6 +184,9 @@ public final class SwerveEstimator {
             }
         }
         FieldView.visionEstimates.setPoses(visionPoses);
+
+        Logger.recordOutput("Drive/Estimated Pose", latestPose);
+        Logger.recordOutput("Drive/Vision Estimates", visionPoses.toArray(new Pose2d[0]));
     }
 
     private int compareStdDevs(TagTrackerInput.VisionUpdate u1, TagTrackerInput.VisionUpdate u2) {

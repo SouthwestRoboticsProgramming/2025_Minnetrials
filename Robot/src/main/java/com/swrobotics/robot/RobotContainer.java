@@ -45,11 +45,12 @@ public class RobotContainer {
         // Turn off joystick warnings in sim
         DriverStation.silenceJoystickConnectionWarning(RobotBase.isSimulation());
 
+        // MusicSubsystem must be initialized first
+        music = new MusicSubsystem();
+
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
         drive = new SwerveDrive();
-
         lights = new LightsSubsystem(this);
-        music = new MusicSubsystem(this);
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);
