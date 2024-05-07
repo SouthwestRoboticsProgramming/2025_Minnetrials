@@ -7,9 +7,7 @@ import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 
-import com.swrobotics.robot.subsystems.swerve.io.CtreSwerveModuleIO;
-import com.swrobotics.robot.subsystems.swerve.io.SimSwerveModuleIO;
-import com.swrobotics.robot.subsystems.swerve.io.SwerveModuleIO;
+import com.swrobotics.robot.subsystems.swerve.io.*;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -51,7 +49,8 @@ public final class SwerveDrive extends SubsystemBase {
     private static final DriveRequest NULL_DRIVE = new DriveRequest(Integer.MIN_VALUE, new Translation2d(0, 0), DriveRequestType.OpenLoopVoltage);
     private static final TurnRequest NULL_TURN = new TurnRequest(Integer.MIN_VALUE, new Rotation2d(0));
 
-    private final AHRS gyro;
+    private final GyroIO gyroIO;
+    private final GyroIO.Inputs gyroInputs;
     private final SwerveModuleIO[] moduleIOs;
     private final SwerveModuleIO.Inputs[] moduleInputs;
 
@@ -59,14 +58,20 @@ public final class SwerveDrive extends SubsystemBase {
     private final SwerveEstimator estimator;
 
     private SwerveModulePosition[] prevPositions;
-    private Rotation2d prevGyroAngle;
+    private double prevGyroAngle;
 
     private DriveRequest currentDriveRequest;
     private TurnRequest currentTurnRequest;
     private int lastSelectedPriority;
 
     public SwerveDrive() {
-        gyro = new AHRS(SPI.Port.kMXP);
+//        gyro = new AHRS(SPI.Port.kMXP);
+        if (RobotBase.isReal()) {
+            gyroIO = new NavXGyroIO();
+        } else {
+            gyroIO = new SimGyroIO();
+        }
+        gyroInputs = new GyroIO.Inputs();
 
         SwerveModule.Info[] infos = Constants.kSwerveModuleInfos;
 
@@ -163,6 +168,9 @@ public final class SwerveDrive extends SubsystemBase {
 
     @Override
     public void periodic() {
+        gyroIO.updateInputs(gyroInputs);
+        Logger.processInputs("Gyro", gyroInputs);
+
         for (int i = 0; i < moduleIOs.length; i++) {
             SwerveModuleIO io = moduleIOs[i];
             SwerveModuleIO.Inputs inputs = moduleInputs[i];
@@ -180,19 +188,18 @@ public final class SwerveDrive extends SubsystemBase {
 
         // Update estimator
         SwerveModulePosition[] positions = getCurrentModulePositions();
-        Rotation2d gyroAngle = gyro.getRotation2d();
         if (prevPositions != null) {
             Twist2d twist = kinematics.getTwistDelta(prevPositions, positions);
 
             // We trust the gyro more than the kinematics estimate
-            if (RobotBase.isReal() && gyro.isConnected()) {
-                twist.dtheta = gyroAngle.getRadians() - prevGyroAngle.getRadians();
+            if (gyroInputs.connected) {
+                twist.dtheta = gyroInputs.yaw - prevGyroAngle;
             }
 
             estimator.update(twist);
         }
         prevPositions = positions;
-        prevGyroAngle = gyroAngle;
+        prevGyroAngle = gyroInputs.yaw;
 
         // Apply drive request when robot enabled
         if (!DriverStation.isDisabled()) {
@@ -247,7 +254,7 @@ public final class SwerveDrive extends SubsystemBase {
     }
 
     public Rotation2d getRawGyroRotation() {
-        return gyro.getRotation2d();
+        return Rotation2d.fromRadians(gyroInputs.yaw);
     }
 
     public int getLastSelectedPriority() {
