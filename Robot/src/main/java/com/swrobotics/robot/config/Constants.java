@@ -26,7 +26,7 @@ public final class Constants {
     public static final double kDeadband = 0.15;
     public static final double kTriggerThreshold = 0.3;
 
-    public static final double kDriveControlMaxAccel = 5.5; // m/s^2
+    public static final double kDriveControlMaxAccel = 5000.5; // m/s^2
     public static final double kDriveControlMaxTurnSpeed = 1; // rot/s
     public static final double kDriveControlDrivePower = 2; // Exponent input is raised to
     public static final double kDriveControlTurnPower = 2;

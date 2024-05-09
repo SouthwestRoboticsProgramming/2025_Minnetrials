@@ -7,7 +7,6 @@ import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import org.littletonrobotics.junction.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,11 +14,11 @@ import java.util.Optional;
 
 public final class SwerveSetpointGenerator {
     private final Translation2d[] modules;
-    private final SwerveDriveKinematics mKinematics;
+    private final SwerveDriveKinematics kinematics;
 
     public SwerveSetpointGenerator(Translation2d[] modules) {
         this.modules = modules;
-        this.mKinematics = new SwerveDriveKinematics(modules);
+        this.kinematics = new SwerveDriveKinematics(modules);
     }
 
     /**
@@ -53,57 +52,80 @@ public final class SwerveSetpointGenerator {
      * do root finding, but it's usually faster than simple bisection while being robust in ways that e.g. the Newton-Raphson
      * method isn't.
      * @param func The Function2d to take the root of.
-     * @param x_0 x value of the lower bracket.
-     * @param y_0 y value of the lower bracket.
-     * @param f_0 value of 'func' at x_0, y_0 (passed in by caller to save a call to 'func' during recursion)
-     * @param x_1 x value of the upper bracket.
-     * @param y_1 y value of the upper bracket.
-     * @param f_1 value of 'func' at x_1, y_1 (passed in by caller to save a call to 'func' during recursion)
-     * @param iterations_left Number of iterations of root finding left.
+     * @param x0 x value of the lower bracket.
+     * @param y0 y value of the lower bracket.
+     * @param f0 value of 'func' at x0, y0 (passed in by caller to save a call to 'func' during recursion)
+     * @param x1 x value of the upper bracket.
+     * @param y1 y value of the upper bracket.
+     * @param f1 value of 'func' at x1, y1 (passed in by caller to save a call to 'func' during recursion)
+     * @param iterationsLeft Number of iterations of root finding left.
      * @return The parameter value 's' that interpolating between 0 and 1 that corresponds to the (approximate) root.
      */
-    private double findRoot(Function2d func, double x_0, double y_0, double f_0, double x_1, double y_1, double f_1, int iterations_left) {
-        if (iterations_left < 0 || MathUtil.fuzzyEquals(f_0, f_1)) {
+    private double findRoot(Function2d func, double x0, double y0, double f0, double x1, double y1, double f1, int iterationsLeft) {
+        if (iterationsLeft < 0 || MathUtil.fuzzyEquals(f0, f1)) {
             return 1.0;
         }
-        var s_guess = Math.max(0.0, Math.min(1.0, -f_0 / (f_1 - f_0)));
-        var x_guess = (x_1 - x_0) * s_guess + x_0;
-        var y_guess = (y_1 - y_0) * s_guess + y_0;
-        var f_guess = func.f(x_guess, y_guess);
-        if (Math.signum(f_0) == Math.signum(f_guess)) {
+
+        double sGuess = MathUtil.clamp(-f0 / (f1 - f0), 0, 1);
+        double xGuess = MathUtil.lerp(x0, x1, sGuess);
+        double yGuess = MathUtil.lerp(y0, y1, sGuess);
+        double fGuess = func.f(xGuess, yGuess);
+
+        if (Math.signum(f0) == Math.signum(fGuess)) {
             // 0 and guess on same side of root, so use upper bracket.
-            return s_guess + (1.0 - s_guess) * findRoot(func, x_guess, y_guess, f_guess, x_1, y_1, f_1, iterations_left - 1);
+            return sGuess + (1.0 - sGuess) * findRoot(func, xGuess, yGuess, fGuess, x1, y1, f1, iterationsLeft - 1);
         } else {
             // Use lower bracket.
-            return s_guess * findRoot(func, x_0, y_0, f_0, x_guess, y_guess, f_guess, iterations_left - 1);
+            return sGuess * findRoot(func, x0, y0, f0, xGuess, yGuess, fGuess, iterationsLeft - 1);
         }
     }
 
-    protected double findSteeringMaxS(double x_0, double y_0, double f_0, double x_1, double y_1, double f_1, double max_deviation, int max_iterations) {
-        f_1 = unwrapAngle(f_0, f_1);
-        double diff = f_1 - f_0;
-        if (Math.abs(diff) <= max_deviation) {
+    protected double findSteeringMaxS(double x0, double y0, double f0, double x1, double y1, double f1, double maxDeviation, int maxIterations) {
+        f1 = unwrapAngle(f0, f1);
+        double diff = f1 - f0;
+        if (Math.abs(diff) <= maxDeviation) {
             // Can go all the way to s=1.
             return 1.0;
         }
-        double offset = f_0 + Math.signum(diff) * max_deviation;
+        double offset = f0 + Math.signum(diff) * maxDeviation;
         Function2d func = (x,y) -> {
-            return unwrapAngle(f_0, Math.atan2(y, x)) - offset;
+            return unwrapAngle(f0, Math.atan2(y, x)) - offset;
         };
-        return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        return findRoot(func, x0, y0, f0 - offset, x1, y1, f1 - offset, maxIterations);
     }
 
-    protected double findDriveMaxS(double x_0, double y_0, double f_0, double x_1, double y_1, double f_1, double max_vel_step, int max_iterations) {
-        double diff = f_1 - f_0;
-        if (Math.abs(diff) <= max_vel_step) {
-            // Can go all the way to s=1.
+    private boolean inRange(double s) {
+        return Double.isFinite(s) && s >= 0 && s <= 1;
+    }
+
+    private double findDriveMaxS(double x0, double y0, double x1, double y1, double maxVelStep) {
+        double l0 = x0 * x0 + y0 * y0;
+        double l1 = x1 * x1 + y1 * y1;
+        double sqrtL0 = Math.sqrt(l0);
+        double diff = Math.sqrt(l1) - sqrtL0;
+        if (Math.abs(diff) <= maxVelStep)
             return 1.0;
-        }
-        double offset = f_0 + Math.signum(diff) * max_vel_step;
-        Function2d func = (x,y) -> {
-            return Math.hypot(x, y) - offset;
-        };
-        return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+
+        double offset = sqrtL0 + Math.copySign(maxVelStep, diff);
+        double xp = x0 * x1;
+        double yp = y0 * y1;
+
+        // Quadratic of s
+        double a = l0 + l1 - 2 * (xp + yp);
+        double b = 2 * (xp + yp - l0);
+        double c = l0 - offset * offset;
+        double root = Math.sqrt(b * b - 4 * a * c);
+
+        // Check if either of the solutions are valid
+        double s1 = (-b + root) / (2 * a);
+        if (inRange(s1))
+            return s1;
+        double s2 = (-b - root) / (2 * a);
+        if (inRange(s2))
+            return s2;
+
+        // Shouldn't happen, but if it does just don't limit movement
+        return 1.0;
     }
 
     private Twist2d toTwist2d(ChassisSpeeds speeds) {
@@ -132,75 +154,78 @@ public final class SwerveSetpointGenerator {
      * Generate a new setpoint.
      *
      * @param limits The kinematic limits to respect for this setpoint.
-     * @param prevSetpoint The previous setpoint motion. Normally, you'd pass in the previous iteration setpoint instead of the actual
+     * @param prevSetpoints The previous setpoint motion. Normally, you'd pass in the previous iteration setpoint instead of the actual
      *                     measured/estimated kinematic state.
      * @param desiredState The desired state of motion, such as from the driver sticks or a path following algorithm.
      * @param dt The loop time.
      * @return A Setpoint object that satisfies all of the KinematicLimits while converging to desiredState quickly.
      */
-    public SwerveSetpoint generateSetpoint(final SwerveKinematicLimits limits, final SwerveSetpoint prevSetpoint, ChassisSpeeds desiredState, double dt) {
-        SwerveModuleState[] desiredModuleState = mKinematics.toSwerveModuleStates(desiredState);
+    public SwerveSetpoints generateSetpoint(final SwerveKinematicLimits limits, final SwerveSetpoints prevSetpoints, ChassisSpeeds desiredState, double dt) {
+        SwerveModuleState[] desiredModuleState = kinematics.toSwerveModuleStates(desiredState);
         // Make sure desiredState respects velocity limits.
         if (limits.kMaxDriveVelocity > 0.0) {
             SwerveDriveKinematics.desaturateWheelSpeeds(desiredModuleState, limits.kMaxDriveVelocity);
-            desiredState = mKinematics.toChassisSpeeds(desiredModuleState);
+            desiredState = kinematics.toChassisSpeeds(desiredModuleState);
         }
-        Logger.recordOutput("Drive/Module Desired Setpoints", desiredModuleState);
 
         // Special case: desiredState is a complete stop. In this case, module angle is arbitrary, so just use the previous angle.
-        boolean need_to_steer = true;
+        boolean needToSteer = true;
         if (twistEpsilonEquals(toTwist2d(desiredState), new Twist2d())) {
-            need_to_steer = false;
+            needToSteer = false;
             for (int i = 0; i < modules.length; ++i) {
-                desiredModuleState[i].angle = prevSetpoint.mModuleStates[i].angle;
+                desiredModuleState[i].angle = prevSetpoints.moduleStates[i].angle;
                 desiredModuleState[i].speedMetersPerSecond = 0.0;
             }
         }
 
         // For each module, compute local Vx and Vy vectors.
-        double[] prev_vx = new double[modules.length];
-        double[] prev_vy = new double[modules.length];
-        Rotation2d[] prev_heading = new Rotation2d[modules.length];
-        double[] desired_vx = new double[modules.length];
-        double[] desired_vy = new double[modules.length];
-        Rotation2d[] desired_heading = new Rotation2d[modules.length];
-        boolean all_modules_should_flip = true;
+        double[] prevVX = new double[modules.length];
+        double[] prevVY = new double[modules.length];
+        Rotation2d[] prevHeading = new Rotation2d[modules.length];
+        double[] desiredVX = new double[modules.length];
+        double[] desiredVY = new double[modules.length];
+        Rotation2d[] desiredHeading = new Rotation2d[modules.length];
+        boolean allModulesShouldFlip = true;
         for (int i = 0; i < modules.length; ++i) {
-            prev_vx[i] = prevSetpoint.mModuleStates[i].angle.getCos() * prevSetpoint.mModuleStates[i].speedMetersPerSecond;
-            prev_vy[i] = prevSetpoint.mModuleStates[i].angle.getSin() * prevSetpoint.mModuleStates[i].speedMetersPerSecond;
-            prev_heading[i] = prevSetpoint.mModuleStates[i].angle;
-            if (prevSetpoint.mModuleStates[i].speedMetersPerSecond < 0.0) {
-                prev_heading[i] = flipWithTrig(prev_heading[i]);
+            SwerveModuleState prevSetpoint = prevSetpoints.moduleStates[i];
+            prevVX[i] = prevSetpoint.angle.getCos() * prevSetpoint.speedMetersPerSecond;
+            prevVY[i] = prevSetpoint.angle.getSin() * prevSetpoint.speedMetersPerSecond;
+            prevHeading[i] = prevSetpoint.angle;
+            if (prevSetpoint.speedMetersPerSecond < 0.0) {
+                prevHeading[i] = flipWithTrig(prevHeading[i]);
             }
-            desired_vx[i] = desiredModuleState[i].angle.getCos() * desiredModuleState[i].speedMetersPerSecond;
-            desired_vy[i] = desiredModuleState[i].angle.getSin() * desiredModuleState[i].speedMetersPerSecond;
-            desired_heading[i] = desiredModuleState[i].angle;
-            if (desiredModuleState[i].speedMetersPerSecond < 0.0) {
-                desired_heading[i] = flipWithTrig(desired_heading[i]);
+
+            SwerveModuleState desiredSetpoint = desiredModuleState[i];
+            desiredVX[i] = desiredSetpoint.angle.getCos() * desiredSetpoint.speedMetersPerSecond;
+            desiredVY[i] = desiredSetpoint.angle.getSin() * desiredSetpoint.speedMetersPerSecond;
+            desiredHeading[i] = desiredSetpoint.angle;
+            if (desiredSetpoint.speedMetersPerSecond < 0.0) {
+                desiredHeading[i] = flipWithTrig(desiredHeading[i]);
             }
-            if (all_modules_should_flip) {
-                double required_rotation_rad = Math.abs(inverseWithTrig(prev_heading[i]).rotateBy(desired_heading[i]).getRadians());
-                if (required_rotation_rad < Math.PI / 2.0) {
-                    all_modules_should_flip = false;
+
+            if (allModulesShouldFlip) {
+                double requiredRotationRad = Math.abs(inverseWithTrig(prevHeading[i]).rotateBy(desiredHeading[i]).getRadians());
+                if (requiredRotationRad < Math.PI / 2.0) {
+                    allModulesShouldFlip = false;
                 }
             }
         }
-        if (all_modules_should_flip &&
-                !twistEpsilonEquals(toTwist2d(prevSetpoint.mChassisSpeeds), new Twist2d()) &&
+        if (allModulesShouldFlip &&
+                !twistEpsilonEquals(toTwist2d(prevSetpoints.chassisSpeeds), new Twist2d()) &&
                 !twistEpsilonEquals(toTwist2d(desiredState), new Twist2d())) {
             // It will (likely) be faster to stop the robot, rotate the modules in place to the complement of the desired
             // angle, and accelerate again.
-            return generateSetpoint(limits, prevSetpoint, new ChassisSpeeds(), dt);
+            return generateSetpoint(limits, prevSetpoints, new ChassisSpeeds(), dt);
         }
 
         // Compute the deltas between start and goal. We can then interpolate from the start state to the goal state; then
         // find the amount we can move from start towards goal in this cycle such that no kinematic limit is exceeded.
-        double dx = desiredState.vxMetersPerSecond - prevSetpoint.mChassisSpeeds.vxMetersPerSecond;
-        double dy = desiredState.vyMetersPerSecond - prevSetpoint.mChassisSpeeds.vyMetersPerSecond;
-        double dtheta = desiredState.omegaRadiansPerSecond - prevSetpoint.mChassisSpeeds.omegaRadiansPerSecond;
+        double dx = desiredState.vxMetersPerSecond - prevSetpoints.chassisSpeeds.vxMetersPerSecond;
+        double dy = desiredState.vyMetersPerSecond - prevSetpoints.chassisSpeeds.vyMetersPerSecond;
+        double dtheta = desiredState.omegaRadiansPerSecond - prevSetpoints.chassisSpeeds.omegaRadiansPerSecond;
 
         // 's' interpolates between start and goal. At 0, we are at prevState and at 1, we are at desiredState.
-        double min_s = 1.0;
+        double minS = 1.0;
 
         // In cases where an individual module is stopped, we want to remember the right steering angle to command (since
         // inverse kinematics doesn't care about angle, we can be opportunistically lazy).
@@ -208,78 +233,74 @@ public final class SwerveSetpointGenerator {
         // Enforce steering velocity limits. We do this by taking the derivative of steering angle at the current angle,
         // and then backing out the maximum interpolant between start and goal states. We remember the minimum across all modules, since
         // that is the active constraint.
-        final double max_theta_step = dt * limits.kMaxSteeringVelocity;
+        final double maxThetaStep = dt * limits.kMaxSteeringVelocity;
         for (int i = 0; i < modules.length; ++i) {
-            if (!need_to_steer) {
-                overrideSteering.add(Optional.of(prevSetpoint.mModuleStates[i].angle));
+            if (!needToSteer) {
+                overrideSteering.add(Optional.of(prevSetpoints.moduleStates[i].angle));
                 continue;
             }
             overrideSteering.add(Optional.empty());
-            if (MathUtil.fuzzyEquals(prevSetpoint.mModuleStates[i].speedMetersPerSecond, 0.0)) {
+            if (MathUtil.fuzzyEquals(prevSetpoints.moduleStates[i].speedMetersPerSecond, 0.0)) {
                 // If module is stopped, we know that we will need to move straight to the final steering angle, so limit based
                 // purely on rotation in place.
                 if (MathUtil.fuzzyEquals(desiredModuleState[i].speedMetersPerSecond, 0.0)) {
                     // Goal angle doesn't matter. Just leave module at its current angle.
-                    overrideSteering.set(i, Optional.of(prevSetpoint.mModuleStates[i].angle));
+                    overrideSteering.set(i, Optional.of(prevSetpoints.moduleStates[i].angle));
                     continue;
                 }
 
-                var necessaryRotation = inverseWithTrig(prevSetpoint.mModuleStates[i].angle).rotateBy(
+                var necessaryRotation = inverseWithTrig(prevSetpoints.moduleStates[i].angle).rotateBy(
                         desiredModuleState[i].angle);
                 if (flipHeading(necessaryRotation)) {
                     necessaryRotation = necessaryRotation.rotateBy(new Rotation2d(Math.PI));
                 }
                 // getRadians() bounds to +/- Pi.
-                final double numStepsNeeded = Math.abs(necessaryRotation.getRadians()) / max_theta_step;
+                final double numStepsNeeded = Math.abs(necessaryRotation.getRadians()) / maxThetaStep;
 
                 if (numStepsNeeded <= 1.0) {
                     // Steer directly to goal angle.
                     overrideSteering.set(i, Optional.of(desiredModuleState[i].angle));
-                    // Don't limit the global min_s;
-                    continue;
+                    // Don't limit the global minS;
                 } else {
-                    // Adjust steering by max_theta_step.
-                    overrideSteering.set(i, Optional.of(prevSetpoint.mModuleStates[i].angle.rotateBy(
-                            Rotation2d.fromRadians(Math.signum(necessaryRotation.getRadians()) * max_theta_step))));
-                    min_s = 0.0;
-                    continue;
+                    // Adjust steering by maxThetaStep.
+                    overrideSteering.set(i, Optional.of(prevSetpoints.moduleStates[i].angle.rotateBy(
+                            Rotation2d.fromRadians(Math.signum(necessaryRotation.getRadians()) * maxThetaStep))));
+                    minS = 0.0;
                 }
+                continue;
             }
-            if (min_s == 0.0) {
+            if (minS == 0.0) {
                 // s can't get any lower. Save some CPU.
                 continue;
             }
 
-            final int kMaxIterations = 8;
-            double s = findSteeringMaxS(prev_vx[i], prev_vy[i], prev_heading[i].getRadians(),
-                    desired_vx[i], desired_vy[i], desired_heading[i].getRadians(),
-                    max_theta_step, kMaxIterations);
-            min_s = Math.min(min_s, s);
+            final int kMaxIterations = 10;
+            double s = findSteeringMaxS(prevVX[i], prevVY[i], prevHeading[i].getRadians(),
+                    desiredVX[i], desiredVY[i], desiredHeading[i].getRadians(),
+                    maxThetaStep, kMaxIterations);
+            minS = Math.min(minS, s);
         }
 
         // Enforce drive wheel acceleration limits.
-        final double max_vel_step = dt * limits.kMaxDriveAcceleration;
+        final double maxVelStep = dt * limits.kMaxDriveAcceleration;
         for (int i = 0; i < modules.length; ++i) {
-            if (min_s == 0.0) {
+            if (minS == 0.0) {
                 // No need to carry on.
                 break;
             }
-            double vx_min_s = min_s == 1.0 ? desired_vx[i] : (desired_vx[i] - prev_vx[i]) * min_s + prev_vx[i];
-            double vy_min_s = min_s == 1.0 ? desired_vy[i] : (desired_vy[i] - prev_vy[i]) * min_s + prev_vy[i];
-            // Find the max s for this drive wheel. Search on the interval between 0 and min_s, because we already know we can't go faster
+            double vxMinS = minS == 1.0 ? desiredVX[i] : (desiredVX[i] - prevVX[i]) * minS + prevVX[i];
+            double vyMinS = minS == 1.0 ? desiredVY[i] : (desiredVY[i] - prevVY[i]) * minS + prevVY[i];
+            // Find the max s for this drive wheel. Search on the interval between 0 and minS, because we already know we can't go faster
             // than that.
-            final int kMaxIterations = 10;
-            double s = min_s * findDriveMaxS(prev_vx[i], prev_vy[i], Math.hypot(prev_vx[i], prev_vy[i]),
-                    vx_min_s, vy_min_s, Math.hypot(vx_min_s, vy_min_s),
-                    max_vel_step, kMaxIterations);
-            min_s = Math.min(min_s, s);
+            double s = minS * findDriveMaxS(prevVX[i], prevVY[i], vxMinS, vyMinS, maxVelStep);
+            minS = Math.min(minS, s);
         }
 
         ChassisSpeeds retSpeeds = new ChassisSpeeds(
-                prevSetpoint.mChassisSpeeds.vxMetersPerSecond + min_s * dx,
-                prevSetpoint.mChassisSpeeds.vyMetersPerSecond + min_s * dy,
-                prevSetpoint.mChassisSpeeds.omegaRadiansPerSecond + min_s * dtheta);
-        var retStates = mKinematics.toSwerveModuleStates(retSpeeds);
+                prevSetpoints.chassisSpeeds.vxMetersPerSecond + minS * dx,
+                prevSetpoints.chassisSpeeds.vyMetersPerSecond + minS * dy,
+                prevSetpoints.chassisSpeeds.omegaRadiansPerSecond + minS * dtheta);
+        var retStates = kinematics.toSwerveModuleStates(retSpeeds);
         for (int i = 0; i < modules.length; ++i) {
             final var maybeOverride = overrideSteering.get(i);
             if (maybeOverride.isPresent()) {
@@ -289,12 +310,12 @@ public final class SwerveSetpointGenerator {
                 }
                 retStates[i].angle = override;
             }
-            final var deltaRotation = inverseWithTrig(prevSetpoint.mModuleStates[i].angle).rotateBy(retStates[i].angle);
+            final var deltaRotation = inverseWithTrig(prevSetpoints.moduleStates[i].angle).rotateBy(retStates[i].angle);
             if (flipHeading(deltaRotation)) {
                 retStates[i].angle = flipWithTrig(retStates[i].angle);
                 retStates[i].speedMetersPerSecond *= -1.0;
             }
         }
-        return new SwerveSetpoint(retSpeeds, retStates);
+        return new SwerveSetpoints(retSpeeds, desiredModuleState, retStates);
     }
 }

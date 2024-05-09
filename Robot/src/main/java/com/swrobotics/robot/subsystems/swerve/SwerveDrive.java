@@ -54,7 +54,7 @@ public final class SwerveDrive extends SubsystemBase {
 
     private SwerveModulePosition[] prevPositions;
     private double prevGyroAngle;
-    private SwerveSetpoint prevSetpoints;
+    private SwerveSetpoints prevSetpoints;
 
     private DriveRequest currentDriveRequest;
     private TurnRequest currentTurnRequest;
@@ -99,15 +99,18 @@ public final class SwerveDrive extends SubsystemBase {
         this.setpointGenerator = new SwerveSetpointGenerator(positions);
 
         prevPositions = null;
-        prevSetpoints = SwerveSetpoint.createInitial(infos.length);
+        prevSetpoints = SwerveSetpoints.createInitial(infos.length);
         currentDriveRequest = NULL_DRIVE;
         currentTurnRequest = NULL_TURN;
 
-        // Cheesy constants
+        // Cheesy constants (TODO: Make it possible to change)
         limits = new SwerveKinematicLimits();
-        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
-        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
-        limits.kMaxSteeringVelocity = Math.toRadians(1500);
+//        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
+//        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
+//        limits.kMaxSteeringVelocity = Math.toRadians(1500);
+        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed * 0.9 / 4;
+        limits.kMaxDriveAcceleration = 4.4 / 5;
+        limits.kMaxSteeringVelocity = Math.PI / 3;//750.0;
 
         // Configure PathPlanner
         AutoBuilder.configureHolonomic(
@@ -218,12 +221,13 @@ public final class SwerveDrive extends SubsystemBase {
 
             // Apply the drive request
             requestedSpeeds = ChassisSpeeds.discretize(requestedSpeeds, Constants.kDriveDriftComp);
-            SwerveSetpoint setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
-            SwerveModuleState[] moduleSetpoints = setpoints.mModuleStates;
+            SwerveSetpoints setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
+            SwerveModuleState[] moduleSetpoints = setpoints.moduleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
                 moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
             }
             prevSetpoints = setpoints;
+            Logger.recordOutput("Drive/Module Desired Setpoints", setpoints.desiredModuleStates);
             Logger.recordOutput("Drive/Module Setpoints", moduleSetpoints);
         }
     }
