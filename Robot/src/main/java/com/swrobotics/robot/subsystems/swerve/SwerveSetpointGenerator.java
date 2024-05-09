@@ -14,33 +14,6 @@ import java.util.List;
 import java.util.Optional;
 
 public final class SwerveSetpointGenerator {
-    public static class SwerveSetpoint {
-        public static SwerveSetpoint createInitial(int moduleCount) {
-            SwerveModuleState[] states = new SwerveModuleState[moduleCount];
-            for (int i = 0; i < moduleCount; i++) {
-                states[i] = new SwerveModuleState();
-            }
-            return new SwerveSetpoint(new ChassisSpeeds(), states);
-        }
-
-        public ChassisSpeeds mChassisSpeeds;
-        public SwerveModuleState[] mModuleStates;
-
-        public SwerveSetpoint(ChassisSpeeds chassisSpeeds, SwerveModuleState[] initialStates) {
-            this.mChassisSpeeds = chassisSpeeds;
-            this.mModuleStates = initialStates;
-        }
-
-        @Override
-        public String toString() {
-            String ret = mChassisSpeeds.toString() + "\n";
-            for (int i = 0; i < mModuleStates.length; ++i ) {
-                ret += "  " + mModuleStates[i].toString() + "\n";
-            }
-            return ret;
-        }
-    }
-
     private final Translation2d[] modules;
     private final SwerveDriveKinematics mKinematics;
 

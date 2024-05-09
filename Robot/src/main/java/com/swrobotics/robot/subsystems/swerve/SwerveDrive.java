@@ -54,7 +54,7 @@ public final class SwerveDrive extends SubsystemBase {
 
     private SwerveModulePosition[] prevPositions;
     private double prevGyroAngle;
-    private SwerveSetpointGenerator.SwerveSetpoint prevSetpoints;
+    private SwerveSetpoint prevSetpoints;
 
     private DriveRequest currentDriveRequest;
     private TurnRequest currentTurnRequest;
@@ -99,7 +99,7 @@ public final class SwerveDrive extends SubsystemBase {
         this.setpointGenerator = new SwerveSetpointGenerator(positions);
 
         prevPositions = null;
-        prevSetpoints = SwerveSetpointGenerator.SwerveSetpoint.createInitial(infos.length);
+        prevSetpoints = SwerveSetpoint.createInitial(infos.length);
         currentDriveRequest = NULL_DRIVE;
         currentTurnRequest = NULL_TURN;
 
@@ -218,7 +218,7 @@ public final class SwerveDrive extends SubsystemBase {
 
             // Apply the drive request
             requestedSpeeds = ChassisSpeeds.discretize(requestedSpeeds, Constants.kDriveDriftComp);
-            SwerveSetpointGenerator.SwerveSetpoint setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
+            SwerveSetpoint setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
             SwerveModuleState[] moduleSetpoints = setpoints.mModuleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
                 moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
