@@ -44,11 +44,8 @@ public final class Robot extends LoggedRobot {
         // Get autonomous from selector
         autonomousCommand = robotContainer.getAutonomousCommand();
 
-        autonomousDelay = robotContainer.getAutoDelay();
         autonomousTimer.restart();
         hasScheduledAuto = false;
-
-        robotContainer.drive.setEstimatorIgnoreVision(true);
     }
 
     @Override
@@ -66,16 +63,6 @@ public final class Robot extends LoggedRobot {
         if (autonomousCommand != null) {
             autonomousCommand.cancel();
         }
-    }
-
-    @Override
-    public void disabledInit() {
-        robotContainer.disabledInit();
-    }
-
-    @Override
-    public void disabledExit() {
-        robotContainer.disabledExit();
     }
 
     // Override these so WPILib doesn't print unhelpful warnings
