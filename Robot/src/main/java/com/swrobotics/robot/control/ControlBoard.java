@@ -10,7 +10,7 @@ import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
 
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;

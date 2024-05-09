@@ -1,6 +1,6 @@
 package com.swrobotics.lib.input;
 
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 

@@ -1,6 +1,6 @@
 package com.swrobotics.robot.subsystems.lights;
 
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.config.IOAllocation;

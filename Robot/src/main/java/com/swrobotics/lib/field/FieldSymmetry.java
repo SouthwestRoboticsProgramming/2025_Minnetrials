@@ -1,6 +1,6 @@
 package com.swrobotics.lib.field;
 
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;

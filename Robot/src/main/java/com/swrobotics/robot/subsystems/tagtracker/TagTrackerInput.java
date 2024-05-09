@@ -1,7 +1,7 @@
 package com.swrobotics.robot.subsystems.tagtracker;
 
 import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;

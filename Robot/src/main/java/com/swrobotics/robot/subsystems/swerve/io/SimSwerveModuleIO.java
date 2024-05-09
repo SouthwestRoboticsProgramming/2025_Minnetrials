@@ -1,7 +1,7 @@
 package com.swrobotics.robot.subsystems.swerve.io;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public final class SimSwerveModuleIO extends SwerveModuleIO {

@@ -1,4 +1,4 @@
-package com.swrobotics.robot.utils;
+package com.swrobotics.lib.utils;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;

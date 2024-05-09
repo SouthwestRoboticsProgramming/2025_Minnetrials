@@ -1,6 +1,6 @@
 package com.swrobotics.lib.input;
 
-import com.swrobotics.robot.utils.MathUtil;
+import com.swrobotics.lib.utils.MathUtil;
 
 import java.util.function.Supplier;
 
