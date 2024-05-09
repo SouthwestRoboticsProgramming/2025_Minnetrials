@@ -10,6 +10,7 @@ import java.io.File;
  * you are doing, do not modify this file except to change the parameter class to the startRobot
  * call.
  */
+@SuppressWarnings("unused")
 public final class Main {
     private Main() {}
 
