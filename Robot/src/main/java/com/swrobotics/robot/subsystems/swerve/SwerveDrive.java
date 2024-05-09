@@ -1,8 +1,5 @@
 package com.swrobotics.robot.subsystems.swerve;
 
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.CANcoderConfiguration;
-import com.ctre.phoenix6.hardware.TalonFX;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
@@ -12,8 +9,6 @@ import edu.wpi.first.wpilibj.DriverStation;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.SteerRequestType;
-import com.kauailabs.navx.frc.AHRS;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
@@ -29,7 +24,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -56,12 +50,15 @@ public final class SwerveDrive extends SubsystemBase {
 
     private final SwerveKinematics kinematics;
     private final SwerveEstimator estimator;
+    private final SwerveSetpointGenerator setpointGenerator;
 
     private SwerveModulePosition[] prevPositions;
     private double prevGyroAngle;
+    private SwerveSetpointGenerator.SwerveSetpoint prevSetpoints;
 
     private DriveRequest currentDriveRequest;
     private TurnRequest currentTurnRequest;
+    private SwerveKinematicLimits limits;
     private int lastSelectedPriority;
 
     public SwerveDrive() {
@@ -99,10 +96,18 @@ public final class SwerveDrive extends SubsystemBase {
 
         this.kinematics = new SwerveKinematics(positions, Constants.kMaxAchievableSpeed);
         this.estimator = new SwerveEstimator();
+        this.setpointGenerator = new SwerveSetpointGenerator(positions);
 
         prevPositions = null;
+        prevSetpoints = SwerveSetpointGenerator.SwerveSetpoint.createInitial(infos.length);
         currentDriveRequest = NULL_DRIVE;
         currentTurnRequest = NULL_TURN;
+
+        // Cheesy constants
+        limits = new SwerveKinematicLimits();
+        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
+        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
+        limits.kMaxSteeringVelocity = Math.toRadians(1500);
 
         // Configure PathPlanner
         AutoBuilder.configureHolonomic(
@@ -212,10 +217,13 @@ public final class SwerveDrive extends SubsystemBase {
             currentTurnRequest = NULL_TURN;
 
             // Apply the drive request
-            SwerveModuleState[] moduleSetpoints = kinematics.getStates(requestedSpeeds);
+            requestedSpeeds = ChassisSpeeds.discretize(requestedSpeeds, Constants.kDriveDriftComp);
+            SwerveSetpointGenerator.SwerveSetpoint setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
+            SwerveModuleState[] moduleSetpoints = setpoints.mModuleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
                 moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
             }
+            prevSetpoints = setpoints;
             Logger.recordOutput("Drive/Module Setpoints", moduleSetpoints);
         }
     }

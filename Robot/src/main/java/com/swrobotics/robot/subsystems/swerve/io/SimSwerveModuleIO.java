@@ -34,6 +34,6 @@ public final class SimSwerveModuleIO extends SwerveModuleIO {
 
     @Override
     public void apply(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType) {
-        this.state = state;
+        this.state = SwerveModuleState.optimize(state, this.state.angle);
     }
 }

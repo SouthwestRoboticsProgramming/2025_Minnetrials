@@ -139,7 +139,7 @@ public final class SwerveEstimator {
                 Map.Entry<Double, PoseUpdate> nextUpdate = updates.ceilingEntry(timestamp);
 
                 if (prevUpdate == null || nextUpdate == null)
-                    return;
+                    continue;
 
                 Twist2d prevToVisionTwist = MathUtil.multiplyTwist(
                         nextUpdate.getValue().twist,
