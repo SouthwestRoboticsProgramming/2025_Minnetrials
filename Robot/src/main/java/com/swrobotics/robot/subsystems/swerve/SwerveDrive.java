@@ -70,13 +70,13 @@ public final class SwerveDrive extends SubsystemBase {
         }
         gyroInputs = new GyroIO.Inputs();
 
-        SwerveModule.Info[] infos = Constants.kSwerveModuleInfos;
+        SwerveModuleInfo[] infos = Constants.kSwerveModuleInfos;
 
         moduleIOs = new SwerveModuleIO[infos.length];
         moduleInputs = new SwerveModuleIO.Inputs[infos.length];
         Translation2d[] positions = new Translation2d[infos.length];
         for (int i = 0; i < moduleIOs.length; i++) {
-            SwerveModule.Info info = infos[i];
+            SwerveModuleInfo info = infos[i];
 
             if (RobotBase.isReal()) {
                 SwerveModuleConstants moduleConstants = Constants.kSwerveConstantsFactory.createModuleConstants(
@@ -166,7 +166,7 @@ public final class SwerveDrive extends SubsystemBase {
 
     private void calibrate() {
         for (int i = 0; i < moduleIOs.length; i++) {
-            SwerveModule.Info info = Constants.kSwerveModuleInfos[i];
+            SwerveModuleInfo info = Constants.kSwerveModuleInfos[i];
 
             double position = moduleInputs[i].canCoderPos;
             info.offset().set(info.offset().get() - position);
