@@ -92,6 +92,6 @@ public final class ControlBoard extends SubsystemBase {
                         rotation.getRadians(),
                         robot.drive.getEstimatedPose().getRotation());
 
-        robot.drive.driveAndTurn(SwerveDrive.DRIVER_PRIORITY, chassisRequest, DriveRequestType.Velocity);
+        robot.drive.driveAndTurn(SwerveDrive.Priority.DRIVER, chassisRequest, DriveRequestType.Velocity);
     }
 }

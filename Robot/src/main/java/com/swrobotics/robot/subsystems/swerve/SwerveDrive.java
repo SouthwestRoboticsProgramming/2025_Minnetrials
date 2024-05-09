@@ -30,18 +30,32 @@ import org.littletonrobotics.junction.Logger;
 public final class SwerveDrive extends SubsystemBase {
     private static final NTBoolean CALIBRATE_OFFSETS = new NTBoolean("Drive/Modules/Calibrate", false);
 
-    public static final int DRIVER_PRIORITY = 0;
-    public static final int AUTO_PRIORITY = 1;
+    public enum Priority {
+        // Priorities defined lower here take precedence
+        IDLE,
+        DRIVER,
+        AUTO;
+
+        public boolean takesPrecedenceOver(Priority other) {
+            return ordinal() > other.ordinal();
+        }
+
+        public Priority max(Priority other) {
+            if (takesPrecedenceOver(other))
+                return this;
+            return other;
+        }
+    }
 
     // Priority should be one of the priority levels above
-    public static record DriveRequest(int priority, Translation2d robotRelTranslation, DriveRequestType type) {
+    public static record DriveRequest(Priority priority, Translation2d robotRelTranslation, DriveRequestType type) {
     }
 
-    public static record TurnRequest(int priority, Rotation2d turn) {
+    public static record TurnRequest(Priority priority, Rotation2d turn) {
     }
 
-    private static final DriveRequest NULL_DRIVE = new DriveRequest(Integer.MIN_VALUE, new Translation2d(0, 0), DriveRequestType.OpenLoopVoltage);
-    private static final TurnRequest NULL_TURN = new TurnRequest(Integer.MIN_VALUE, new Rotation2d(0));
+    private static final DriveRequest NULL_DRIVE = new DriveRequest(Priority.IDLE, new Translation2d(0, 0), DriveRequestType.OpenLoopVoltage);
+    private static final TurnRequest NULL_TURN = new TurnRequest(Priority.IDLE, new Rotation2d(0));
 
     private final GyroIO gyroIO;
     private final GyroIO.Inputs gyroInputs;
@@ -59,7 +73,7 @@ public final class SwerveDrive extends SubsystemBase {
     private DriveRequest currentDriveRequest;
     private TurnRequest currentTurnRequest;
     private SwerveKinematicLimits limits;
-    private int lastSelectedPriority;
+    private Priority lastSelectedPriority;
 
     public SwerveDrive() {
 //        gyro = new AHRS(SPI.Port.kMXP);
@@ -118,7 +132,7 @@ public final class SwerveDrive extends SubsystemBase {
                 this::setPose,
                 this::getRobotRelativeSpeeds,
                 (speeds) ->
-                    driveAndTurn(AUTO_PRIORITY, speeds, DriveRequestType.Velocity),
+                    driveAndTurn(Priority.AUTO, speeds, DriveRequestType.Velocity),
                 new HolonomicPathFollowerConfig(
                         new PIDConstants(Constants.kAutoDriveKp, Constants.kAutoDriveKd),
                         new PIDConstants(Constants.kAutoTurnKp.get(), Constants.kAutoTurnKd.get()),
@@ -149,18 +163,18 @@ public final class SwerveDrive extends SubsystemBase {
         return positions;
     }
 
-    public void driveAndTurn(int priority, ChassisSpeeds speeds, DriveRequestType type) {
+    public void driveAndTurn(Priority priority, ChassisSpeeds speeds, DriveRequestType type) {
         drive(new DriveRequest(priority, new Translation2d(speeds.vxMetersPerSecond, speeds.vyMetersPerSecond), type));
         turn(new TurnRequest(priority, new Rotation2d(speeds.omegaRadiansPerSecond)));
     }
 
     public void drive(DriveRequest request) {
-        if (request.priority > currentDriveRequest.priority)
+        if (request.priority.takesPrecedenceOver(currentDriveRequest.priority))
             currentDriveRequest = request;
     }
 
     public void turn(TurnRequest request) {
-        if (request.priority > currentTurnRequest.priority)
+        if (request.priority.takesPrecedenceOver(currentTurnRequest.priority))
             currentTurnRequest = request;
     }
 
@@ -215,7 +229,7 @@ public final class SwerveDrive extends SubsystemBase {
                     currentDriveRequest.robotRelTranslation.getX(),
                     currentDriveRequest.robotRelTranslation.getY(),
                     currentTurnRequest.turn.getRadians());
-            lastSelectedPriority = Math.max(currentDriveRequest.priority, currentTurnRequest.priority);
+            lastSelectedPriority = currentDriveRequest.priority.max(currentTurnRequest.priority);
             currentDriveRequest = NULL_DRIVE;
             currentTurnRequest = NULL_TURN;
 
@@ -269,7 +283,7 @@ public final class SwerveDrive extends SubsystemBase {
         return Rotation2d.fromRadians(gyroInputs.yaw);
     }
 
-    public int getLastSelectedPriority() {
+    public Priority getLastSelectedPriority() {
         return lastSelectedPriority;
     }
 
