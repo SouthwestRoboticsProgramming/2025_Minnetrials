@@ -3,3 +3,4 @@ simgui*.json
 networktables.json*
 ctre_sim/
 build/
+logs/

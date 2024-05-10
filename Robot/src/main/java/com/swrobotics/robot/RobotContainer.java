@@ -25,6 +25,7 @@ import java.util.List;
 public class RobotContainer {
     // Whether to simulate the robot or replay a log file
     public static final Logging.SimMode SIM_MODE = Logging.SimMode.SIMULATE;
+//    public static final Logging.SimMode SIM_MODE = Logging.SimMode.SIMULATE_AND_LOG;
 //    public static final Logging.SimMode SIM_MODE = Logging.SimMode.REPLAY;
 
     // Create dashboard choosers

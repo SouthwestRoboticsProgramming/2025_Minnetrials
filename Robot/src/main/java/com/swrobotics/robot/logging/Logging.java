@@ -10,6 +10,7 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public final class Logging {
     public enum SimMode {
         SIMULATE,
+        SIMULATE_AND_LOG,
         REPLAY
     }
 
@@ -20,10 +21,14 @@ public final class Logging {
             Logger.addDataReceiver(new NT4Publisher());
         } else if (simMode == SimMode.SIMULATE) {
             Logger.addDataReceiver(new NT4Publisher());
-        } else {
+        } else if (simMode == SimMode.SIMULATE_AND_LOG) {
+            Logger.addDataReceiver(new NT4Publisher());
+            Logger.addDataReceiver(new WPILOGWriter());
+        }else {
             String path = LogFileUtil.findReplayLog();
             Logger.setReplaySource(new WPILOGReader(path));
             Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_sim")));
+            Logger.addDataReceiver(new NT4Publisher());
         }
 
         Logger.start();
