@@ -22,12 +22,12 @@ public final class Logging {
         } else if (simMode == SimMode.SIMULATE) {
             Logger.addDataReceiver(new NT4Publisher());
         } else if (simMode == SimMode.SIMULATE_AND_LOG) {
+            String path = "";
             Logger.addDataReceiver(new NT4Publisher());
-            Logger.addDataReceiver(new WPILOGWriter());
-        }else {
+            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_sim")));
+        } else {
             String path = LogFileUtil.findReplayLog();
             Logger.setReplaySource(new WPILOGReader(path));
-            Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_sim")));
             Logger.addDataReceiver(new NT4Publisher());
         }
 
