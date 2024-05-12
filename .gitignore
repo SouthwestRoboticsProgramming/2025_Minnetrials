@@ -1,3 +1,15 @@
-*~
-.gradle/
+# IDE files
 .idea/
+.vscode/
+*.iml
+*~
+
+# Build output
+.gradle/
+*build/
+bin/
+target/
+*.pyc
+*__pycache__/
+*.so
+*.class
