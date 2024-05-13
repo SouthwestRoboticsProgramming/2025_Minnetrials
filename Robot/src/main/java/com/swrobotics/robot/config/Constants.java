@@ -63,6 +63,13 @@ public final class Constants {
     public static final double kDriveCurrentLimit = 40; // A
     public static final double kDriveCurrentLimitTime = 0.25; // sec
 
+    public static final SwerveKinematicLimits kDriveLimits = new SwerveKinematicLimits();
+    static {
+        kDriveLimits.kMaxDriveVelocity = kMaxAchievableSpeed;
+        kDriveLimits.kMaxDriveAcceleration = kDriveLimits.kMaxDriveVelocity / 0.1;
+        kDriveLimits.kMaxSteeringVelocity = Math.toRadians(1500);
+    }
+
     private static final Slot0Configs kSteerGains = new Slot0Configs()
             .withKP(100).withKD(0.05);
     private static final Slot0Configs kDriveGains = new Slot0Configs()

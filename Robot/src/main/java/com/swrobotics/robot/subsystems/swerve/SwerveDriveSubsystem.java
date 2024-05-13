@@ -76,7 +76,6 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
     private Priority lastSelectedPriority;
 
     public SwerveDriveSubsystem() {
-//        gyro = new AHRS(SPI.Port.kMXP);
         if (RobotBase.isReal()) {
             gyroIO = new NavXGyroIO();
         } else {
@@ -116,15 +115,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
         prevSetpoints = SwerveSetpoints.createInitial(infos.length);
         currentDriveRequest = NULL_DRIVE;
         currentTurnRequest = NULL_TURN;
-
-        // Cheesy constants (TODO: Make it possible to change)
-        limits = new SwerveKinematicLimits();
-        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
-        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
-        limits.kMaxSteeringVelocity = Math.toRadians(1500);
-//        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed * 0.9 / 4;
-//        limits.kMaxDriveAcceleration = 4.4 / 5;
-//        limits.kMaxSteeringVelocity = Math.PI / 3;//750.0;
+        limits = Constants.kDriveLimits;
 
         // Configure PathPlanner
         AutoBuilder.configureHolonomic(
@@ -289,5 +280,9 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
 
     public void setEstimatorIgnoreVision(boolean ignoreVision) {
         estimator.setIgnoreVision(ignoreVision);
+    }
+
+    public void setKinematicLimits(SwerveKinematicLimits limits) {
+        this.limits = limits;
     }
 }
