@@ -13,6 +13,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+
+import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 
 public final class LightsSubsystem extends SubsystemBase {
     private final RobotContainer robot;
@@ -21,6 +24,8 @@ public final class LightsSubsystem extends SubsystemBase {
 
     private final Debouncer batteryLowDebounce;
     private final PrideSequencer prideSequencer;
+
+    private Optional<Color> override = Optional.empty();
 
     public LightsSubsystem(RobotContainer robot) {
         this.robot = robot;
@@ -61,6 +66,12 @@ public final class LightsSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+
+        if (override.isPresent()) {
+            applySolid(override.get());
+            return;
+        }
+
         boolean overheating = robot.temperatureTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
@@ -146,5 +157,9 @@ public final class LightsSubsystem extends SubsystemBase {
 
     public void disabledInit() {
         prideSequencer.reset();
+    }
+
+    public void setOverride(Optional<Color> color) {
+        override = color;
     }
 }
