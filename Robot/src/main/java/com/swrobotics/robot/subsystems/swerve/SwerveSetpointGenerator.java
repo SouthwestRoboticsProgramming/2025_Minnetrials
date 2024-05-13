@@ -3,7 +3,6 @@ package com.swrobotics.robot.subsystems.swerve;
 import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -21,14 +20,12 @@ public final class SwerveSetpointGenerator {
         this.kinematics = new SwerveDriveKinematics(modules);
     }
 
-    /**
-     * Check if it would be faster to go to the opposite of the goal heading (and reverse drive direction).
-     *
-     * @param prevToGoal The rotation from the previous state to the goal state (i.e. prev.inverse().rotateBy(goal)).
-     * @return True if the shortest path to achieve this rotation involves flipping the drive direction.
-     */
     private boolean flipHeading(Rotation2d prevToGoal) {
         return Math.abs(prevToGoal.getRadians()) > Math.PI / 2.0;
+    }
+
+    private boolean flipHeading(double prevToGoal) {
+        return Math.abs(prevToGoal) > Math.PI / 2.0;
     }
 
     private double unwrapAngle(double ref, double angle) {
@@ -42,14 +39,13 @@ public final class SwerveSetpointGenerator {
         }
     }
 
-    private double findSteeringMaxS(double x0, double y0, double x1, double y1, double maxDeviation) {
-        double initialAngle = Math.atan2(y0, x0);
-        double targetAngle = unwrapAngle(initialAngle, Math.atan2(y1, x1));
-        double diff = targetAngle - initialAngle;
+    private double findSteeringMaxS(double x0, double y0, double theta0, double x1, double y1, double theta1, double maxDeviation) {
+        theta1 = unwrapAngle(theta0, theta1);
+        double diff = theta1 - theta0;
         if (Math.abs(diff) <= maxDeviation)
             return 1.0;
 
-        double offset = initialAngle + Math.copySign(maxDeviation, diff);
+        double offset = theta0 + Math.copySign(maxDeviation, diff);
         double tanOffset = Math.tan(offset);
 
         double num = x0 * tanOffset - y0;
@@ -91,18 +87,10 @@ public final class SwerveSetpointGenerator {
         return 1.0;
     }
 
-    private Twist2d toTwist2d(ChassisSpeeds speeds) {
-        return new Twist2d(
-                speeds.vxMetersPerSecond,
-                speeds.vyMetersPerSecond,
-                speeds.omegaRadiansPerSecond
-        );
-    }
-
-    private boolean twistEpsilonEquals(Twist2d a, Twist2d b) {
-        return MathUtil.fuzzyEquals(a.dx, b.dx)
-                && MathUtil.fuzzyEquals(a.dy, b.dy)
-                && MathUtil.fuzzyEquals(a.dtheta, b.dtheta);
+    private boolean isStill(ChassisSpeeds speeds) {
+        return MathUtil.fuzzyEquals(speeds.vxMetersPerSecond, 0)
+                && MathUtil.fuzzyEquals(speeds.vyMetersPerSecond, 0)
+                && MathUtil.fuzzyEquals(speeds.omegaRadiansPerSecond, 0);
     }
 
     private Rotation2d flipWithTrig(Rotation2d rot) {
@@ -133,7 +121,7 @@ public final class SwerveSetpointGenerator {
 
         // Special case: desiredState is a complete stop. In this case, module angle is arbitrary, so just use the previous angle.
         boolean needToSteer = true;
-        if (twistEpsilonEquals(toTwist2d(desiredState), new Twist2d())) {
+        if (isStill(desiredState)) {
             needToSteer = false;
             for (int i = 0; i < modules.length; ++i) {
                 desiredModuleState[i].angle = prevSetpoints.moduleStates[i].angle;
@@ -167,15 +155,15 @@ public final class SwerveSetpointGenerator {
             }
 
             if (allModulesShouldFlip) {
-                double requiredRotationRad = Math.abs(inverseWithTrig(prevHeading[i]).rotateBy(desiredHeading[i]).getRadians());
+                double requiredRotationRad = Math.abs(desiredHeading[i].getRadians() - prevHeading[i].getRadians());
                 if (requiredRotationRad < Math.PI / 2.0) {
                     allModulesShouldFlip = false;
                 }
             }
         }
         if (allModulesShouldFlip &&
-                !twistEpsilonEquals(toTwist2d(prevSetpoints.chassisSpeeds), new Twist2d()) &&
-                !twistEpsilonEquals(toTwist2d(desiredState), new Twist2d())) {
+                !isStill(prevSetpoints.chassisSpeeds) &&
+                !isStill(desiredState)) {
             // It will (likely) be faster to stop the robot, rotate the modules in place to the complement of the desired
             // angle, and accelerate again.
             return generateSetpoint(limits, prevSetpoints, new ChassisSpeeds(), dt);
@@ -212,13 +200,13 @@ public final class SwerveSetpointGenerator {
                     continue;
                 }
 
-                var necessaryRotation = inverseWithTrig(prevSetpoints.moduleStates[i].angle).rotateBy(
-                        desiredModuleState[i].angle);
-                if (flipHeading(necessaryRotation)) {
-                    necessaryRotation = necessaryRotation.rotateBy(new Rotation2d(Math.PI));
-                }
-                // getRadians() bounds to +/- Pi.
-                final double numStepsNeeded = Math.abs(necessaryRotation.getRadians()) / maxThetaStep;
+                double necessaryRotation = desiredModuleState[i].angle.getRadians()
+                        - prevSetpoints.moduleStates[i].angle.getRadians();
+                if (flipHeading(necessaryRotation))
+                    necessaryRotation += Math.PI;
+
+                necessaryRotation = MathUtil.wrap(necessaryRotation, -Math.PI, Math.PI);
+                final double numStepsNeeded = Math.abs(necessaryRotation) / maxThetaStep;
 
                 if (numStepsNeeded <= 1.0) {
                     // Steer directly to goal angle.
@@ -227,7 +215,7 @@ public final class SwerveSetpointGenerator {
                 } else {
                     // Adjust steering by maxThetaStep.
                     overrideSteering.set(i, Optional.of(prevSetpoints.moduleStates[i].angle.rotateBy(
-                            Rotation2d.fromRadians(Math.signum(necessaryRotation.getRadians()) * maxThetaStep))));
+                            Rotation2d.fromRadians(Math.signum(necessaryRotation) * maxThetaStep))));
                     minS = 0.0;
                 }
                 continue;
@@ -237,11 +225,10 @@ public final class SwerveSetpointGenerator {
                 continue;
             }
 
-//            final int kMaxIterations = 40;
-//            double s = findSteeringMaxS(prevVX[i], prevVY[i], prevHeading[i].getRadians(),
-//                    desiredVX[i], desiredVY[i], desiredHeading[i].getRadians(),
-//                    maxThetaStep, kMaxIterations);
-            double s = findSteeringMaxS(prevVX[i], prevVY[i], desiredVX[i], desiredVY[i], maxThetaStep);
+            double s = findSteeringMaxS(
+                    prevVX[i], prevVY[i], prevHeading[i].getRadians(),
+                    desiredVX[i], desiredVY[i], desiredHeading[i].getRadians(),
+                    maxThetaStep);
             minS = Math.min(minS, s);
         }
 
@@ -252,8 +239,8 @@ public final class SwerveSetpointGenerator {
                 // No need to carry on.
                 break;
             }
-            double vxMinS = minS == 1.0 ? desiredVX[i] : (desiredVX[i] - prevVX[i]) * minS + prevVX[i];
-            double vyMinS = minS == 1.0 ? desiredVY[i] : (desiredVY[i] - prevVY[i]) * minS + prevVY[i];
+            double vxMinS = minS == 1.0 ? desiredVX[i] : MathUtil.lerp(prevVX[i], desiredVX[i], minS);
+            double vyMinS = minS == 1.0 ? desiredVY[i] : MathUtil.lerp(prevVY[i], desiredVY[i], minS);
             // Find the max s for this drive wheel. Search on the interval between 0 and minS, because we already know we can't go faster
             // than that.
             double s = minS * findDriveMaxS(prevVX[i], prevVY[i], vxMinS, vyMinS, maxVelStep);
