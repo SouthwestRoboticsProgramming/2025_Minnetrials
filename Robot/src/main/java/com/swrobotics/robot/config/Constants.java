@@ -122,4 +122,5 @@ public final class Constants {
 
     // Temperature
     public static final double kTemperatureInterval = 2; // Seconds
+    public static final double kOverheatingThreshold = 75; // Celsius
 }

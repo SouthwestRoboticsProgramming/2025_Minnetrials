@@ -17,6 +17,7 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
     private final TemperatureIO io;
     private final TemperatureIO.Inputs inputs;
     private final Timer periodicTimer;
+    private boolean overheating;
 
     public TemperatureTrackerSubsystem() {
         instance = this;
@@ -29,6 +30,8 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
 
         periodicTimer = new Timer();
         periodicTimer.start();
+
+        overheating = false;
     }
 
     public void addMotor(String name, TalonFX motor) {
@@ -40,8 +43,21 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
         if (!periodicTimer.advanceIfElapsed(Constants.kTemperatureInterval))
             return;
 
-        // Only thing we have to do is log
         io.updateInputs(inputs);
         Logger.processInputs("Temperatures", inputs);
+
+        overheating = false;
+        for (double temp : inputs.temperatures) {
+            if (temp > Constants.kOverheatingThreshold) {
+                overheating = true;
+                break;
+            }
+        }
+
+        Logger.recordOutput("Overheating", overheating);
+    }
+
+    public boolean isOverheating() {
+        return overheating;
     }
 }

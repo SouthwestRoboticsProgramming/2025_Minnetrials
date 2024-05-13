@@ -4,6 +4,7 @@ import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.config.IOAllocation;
+import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.util.Color;
@@ -21,8 +22,6 @@ public final class LightsSubsystem extends SubsystemBase {
     private final Debouncer batteryLowDebounce;
     private final PrideSequencer prideSequencer;
 
-    private double shooterReadyStartTimestamp = Double.NaN;
-
     public LightsSubsystem(RobotContainer robot) {
         this.robot = robot;
         leds = new AddressableLED(IOAllocation.RIO.PWM_LEDS);
@@ -37,8 +36,12 @@ public final class LightsSubsystem extends SubsystemBase {
         prideSequencer = new PrideSequencer();
     }
 
+    private void showOverheating() {
+        applySolid(Timer.getFPGATimestamp() % 0.4 > 0.2 ? Color.kRed : Color.kBlack);
+    }
+
     private void showLowBattery() {
-        applySolid(Timer.getFPGATimestamp() % 0.5 > 0.25 ? Color.kRed : Color.kBlack);
+        applySolid(Timer.getFPGATimestamp() % 0.4 > 0.2 ? Color.kOrange : Color.kBlack);
     }
 
     private void showAutoDriving() {
@@ -58,12 +61,17 @@ public final class LightsSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        boolean overheating = robot.temperatureTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
-        if (batteryLowDebounce.calculate(batteryLow)) {
+        if (overheating) {
+            showOverheating();
+        } else if (batteryLowDebounce.calculate(batteryLow)) {
             showLowBattery();
         } else if (DriverStation.isDisabled()) {
             prideSequencer.apply(this);
+        } else if (robot.drive.getLastSelectedPriority() == SwerveDriveSubsystem.Priority.AUTO) {
+            showAutoDriving();
         } else {
             showIdle();
         }
