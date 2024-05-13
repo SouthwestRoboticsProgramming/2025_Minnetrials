@@ -66,6 +66,10 @@ public final class LightsSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (robot.pdp.getInputs().pdpTotalCurrent > 250) { // FIXME: Set value
+            showIdle();
+            return;
+        }
 
         if (override.isPresent()) {
             applySolid(override.get());
