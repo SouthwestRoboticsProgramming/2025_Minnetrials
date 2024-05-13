@@ -7,6 +7,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
+import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
@@ -30,6 +31,8 @@ public final class CtreSwerveModuleIO extends SwerveModuleIO {
 
         MusicSubsystem.getInstance().addInstrument(module.getDriveMotor());
         MusicSubsystem.getInstance().addInstrument(module.getSteerMotor());
+        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Drive", module.getDriveMotor());
+        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Steer", module.getSteerMotor());
     }
 
     @Override

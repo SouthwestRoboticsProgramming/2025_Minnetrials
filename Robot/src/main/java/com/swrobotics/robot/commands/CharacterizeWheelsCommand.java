@@ -1,7 +1,7 @@
 package com.swrobotics.robot.commands;
 
 import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
+import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import com.swrobotics.lib.net.NTDouble;
 
 import edu.wpi.first.math.MathUtil;
@@ -9,12 +9,12 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.wpilibj2.command.Command;
 
 public final class CharacterizeWheelsCommand extends Command {
-    private final SwerveDrive drive;
+    private final SwerveDriveSubsystem drive;
     private SwerveModulePosition[] startingPositions;
     private double lastGyroRad;
     private double gyroAccumulatorRad;
 
-    public CharacterizeWheelsCommand(SwerveDrive drive) {
+    public CharacterizeWheelsCommand(SwerveDriveSubsystem drive) {
         this.drive = drive;
     }
 

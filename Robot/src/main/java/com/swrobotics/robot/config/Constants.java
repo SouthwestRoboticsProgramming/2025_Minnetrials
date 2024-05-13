@@ -7,6 +7,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
+import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
 import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
 import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
 import edu.wpi.first.math.util.Units;
@@ -111,4 +112,7 @@ public final class Constants {
     // Lights
     public static final int kLedStripLength = 22;
     public static final int kLowBatteryThreshold = 10; // Volts
+
+    // Temperature
+    public static final double kTemperatureInterval = 2; // Seconds
 }

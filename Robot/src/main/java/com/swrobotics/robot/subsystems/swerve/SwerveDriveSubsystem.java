@@ -27,7 +27,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
-public final class SwerveDrive extends SubsystemBase {
+public final class SwerveDriveSubsystem extends SubsystemBase {
     private static final NTBoolean CALIBRATE_OFFSETS = new NTBoolean("Drive/Modules/Calibrate", false);
 
     public enum Priority {
@@ -75,7 +75,7 @@ public final class SwerveDrive extends SubsystemBase {
     private SwerveKinematicLimits limits;
     private Priority lastSelectedPriority;
 
-    public SwerveDrive() {
+    public SwerveDriveSubsystem() {
 //        gyro = new AHRS(SPI.Port.kMXP);
         if (RobotBase.isReal()) {
             gyroIO = new NavXGyroIO();
@@ -119,12 +119,12 @@ public final class SwerveDrive extends SubsystemBase {
 
         // Cheesy constants (TODO: Make it possible to change)
         limits = new SwerveKinematicLimits();
-//        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
-//        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
-//        limits.kMaxSteeringVelocity = Math.toRadians(1500);
-        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed * 0.9 / 4;
-        limits.kMaxDriveAcceleration = 4.4 / 5;
-        limits.kMaxSteeringVelocity = Math.PI / 3;//750.0;
+        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed;
+        limits.kMaxDriveAcceleration = limits.kMaxDriveVelocity / 0.1;
+        limits.kMaxSteeringVelocity = Math.toRadians(1500);
+//        limits.kMaxDriveVelocity = Constants.kMaxAchievableSpeed * 0.9 / 4;
+//        limits.kMaxDriveAcceleration = 4.4 / 5;
+//        limits.kMaxSteeringVelocity = Math.PI / 3;//750.0;
 
         // Configure PathPlanner
         AutoBuilder.configureHolonomic(

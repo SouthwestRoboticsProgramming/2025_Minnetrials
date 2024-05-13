@@ -1,5 +1,6 @@
 package com.swrobotics.robot;
 
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -10,8 +11,9 @@ import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
-import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
+import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
+import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj2.command.*;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
@@ -33,7 +35,8 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Double> autoDelaySelector;
 
     public final LoggedPowerDistribution pdp;
-    public final SwerveDrive drive;
+    public final TemperatureTrackerSubsystem temperatureTracker;
+    public final SwerveDriveSubsystem drive;
 
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
@@ -46,11 +49,12 @@ public class RobotContainer {
         // Turn off joystick warnings in sim
         DriverStation.silenceJoystickConnectionWarning(RobotBase.isSimulation());
 
-        // MusicSubsystem must be initialized first
+        // These must be initialized first
         music = new MusicSubsystem();
+        temperatureTracker = new TemperatureTrackerSubsystem();
 
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
-        drive = new SwerveDrive();
+        drive = new SwerveDriveSubsystem();
         lights = new LightsSubsystem(this);
 
         // ControlBoard must be initialized last

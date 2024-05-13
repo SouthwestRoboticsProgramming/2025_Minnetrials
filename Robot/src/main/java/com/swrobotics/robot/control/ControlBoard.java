@@ -8,7 +8,7 @@ import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
 import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.subsystems.swerve.SwerveDrive;
+import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
 import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -92,6 +92,6 @@ public final class ControlBoard extends SubsystemBase {
                         rotation.getRadians(),
                         robot.drive.getEstimatedPose().getRotation());
 
-        robot.drive.driveAndTurn(SwerveDrive.Priority.DRIVER, chassisRequest, DriveRequestType.Velocity);
+        robot.drive.driveAndTurn(SwerveDriveSubsystem.Priority.DRIVER, chassisRequest, DriveRequestType.Velocity);
     }
 }
