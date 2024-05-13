@@ -42,56 +42,19 @@ public final class SwerveSetpointGenerator {
         }
     }
 
-    @FunctionalInterface
-    private interface Function2d {
-        double f(double x, double y);
-    }
-
-    /**
-     * Find the root of the generic 2D parametric function 'func' using the regula falsi technique. This is a pretty naive way to
-     * do root finding, but it's usually faster than simple bisection while being robust in ways that e.g. the Newton-Raphson
-     * method isn't.
-     * @param func The Function2d to take the root of.
-     * @param x0 x value of the lower bracket.
-     * @param y0 y value of the lower bracket.
-     * @param f0 value of 'func' at x0, y0 (passed in by caller to save a call to 'func' during recursion)
-     * @param x1 x value of the upper bracket.
-     * @param y1 y value of the upper bracket.
-     * @param f1 value of 'func' at x1, y1 (passed in by caller to save a call to 'func' during recursion)
-     * @param iterationsLeft Number of iterations of root finding left.
-     * @return The parameter value 's' that interpolating between 0 and 1 that corresponds to the (approximate) root.
-     */
-    private double findRoot(Function2d func, double x0, double y0, double f0, double x1, double y1, double f1, int iterationsLeft) {
-        if (iterationsLeft < 0 || MathUtil.fuzzyEquals(f0, f1)) {
+    private double findSteeringMaxS(double x0, double y0, double x1, double y1, double maxDeviation) {
+        double initialAngle = Math.atan2(y0, x0);
+        double targetAngle = unwrapAngle(initialAngle, Math.atan2(y1, x1));
+        double diff = targetAngle - initialAngle;
+        if (Math.abs(diff) <= maxDeviation)
             return 1.0;
-        }
 
-        double sGuess = MathUtil.clamp(-f0 / (f1 - f0), 0, 1);
-        double xGuess = MathUtil.lerp(x0, x1, sGuess);
-        double yGuess = MathUtil.lerp(y0, y1, sGuess);
-        double fGuess = func.f(xGuess, yGuess);
+        double offset = initialAngle + Math.copySign(maxDeviation, diff);
+        double tanOffset = Math.tan(offset);
 
-        if (Math.signum(f0) == Math.signum(fGuess)) {
-            // 0 and guess on same side of root, so use upper bracket.
-            return sGuess + (1.0 - sGuess) * findRoot(func, xGuess, yGuess, fGuess, x1, y1, f1, iterationsLeft - 1);
-        } else {
-            // Use lower bracket.
-            return sGuess * findRoot(func, x0, y0, f0, xGuess, yGuess, fGuess, iterationsLeft - 1);
-        }
-    }
-
-    protected double findSteeringMaxS(double x0, double y0, double f0, double x1, double y1, double f1, double maxDeviation, int maxIterations) {
-        f1 = unwrapAngle(f0, f1);
-        double diff = f1 - f0;
-        if (Math.abs(diff) <= maxDeviation) {
-            // Can go all the way to s=1.
-            return 1.0;
-        }
-        double offset = f0 + Math.signum(diff) * maxDeviation;
-        Function2d func = (x,y) -> {
-            return unwrapAngle(f0, Math.atan2(y, x)) - offset;
-        };
-        return findRoot(func, x0, y0, f0 - offset, x1, y1, f1 - offset, maxIterations);
+        double num = x0 * tanOffset - y0;
+        double den = (y1 - y0) - (x1 - x0) * tanOffset;
+        return num / den;
     }
 
     private boolean inRange(double s) {
@@ -274,10 +237,11 @@ public final class SwerveSetpointGenerator {
                 continue;
             }
 
-            final int kMaxIterations = 10;
-            double s = findSteeringMaxS(prevVX[i], prevVY[i], prevHeading[i].getRadians(),
-                    desiredVX[i], desiredVY[i], desiredHeading[i].getRadians(),
-                    maxThetaStep, kMaxIterations);
+//            final int kMaxIterations = 40;
+//            double s = findSteeringMaxS(prevVX[i], prevVY[i], prevHeading[i].getRadians(),
+//                    desiredVX[i], desiredVY[i], desiredHeading[i].getRadians(),
+//                    maxThetaStep, kMaxIterations);
+            double s = findSteeringMaxS(prevVX[i], prevVY[i], desiredVX[i], desiredVY[i], maxThetaStep);
             minS = Math.min(minS, s);
         }
 
