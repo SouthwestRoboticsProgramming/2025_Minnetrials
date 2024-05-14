@@ -67,7 +67,7 @@ public final class Constants {
     static {
         kDriveLimits.kMaxDriveVelocity = kMaxAchievableSpeed;
         kDriveLimits.kMaxDriveAcceleration = kDriveLimits.kMaxDriveVelocity / 0.1;
-        kDriveLimits.kMaxSteeringVelocity = Math.PI;//Math.toRadians(1500);
+        kDriveLimits.kMaxSteeringVelocity = Math.toRadians(1500);
     }
 
     private static final Slot0Configs kSteerGains = new Slot0Configs()

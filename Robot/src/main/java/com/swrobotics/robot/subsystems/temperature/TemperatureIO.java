@@ -11,5 +11,5 @@ public interface TemperatureIO {
 
     void updateInputs(Inputs inputs);
 
-    void addMotor(String name, TalonFX motor);
+    void addMotor(String name, String canBus, TalonFX motor);
 }

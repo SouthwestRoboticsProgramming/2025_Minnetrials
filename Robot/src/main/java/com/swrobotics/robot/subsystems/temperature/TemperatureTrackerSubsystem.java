@@ -34,8 +34,8 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
         overheating = false;
     }
 
-    public void addMotor(String name, TalonFX motor) {
-        io.addMotor(name, motor);
+    public void addMotor(String name, String canBus, TalonFX motor) {
+        io.addMotor(name, canBus, motor);
     }
 
     @Override
