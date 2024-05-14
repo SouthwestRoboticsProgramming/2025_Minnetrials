@@ -3,6 +3,7 @@ package com.swrobotics.robot.subsystems.swerve;
 import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
@@ -22,10 +23,6 @@ public final class SwerveSetpointGenerator {
 
     private boolean flipHeading(Rotation2d prevToGoal) {
         return Math.abs(prevToGoal.getRadians()) > Math.PI / 2.0;
-    }
-
-    private boolean flipHeading(double prevToGoal) {
-        return Math.abs(prevToGoal) > Math.PI / 2.0;
     }
 
     private double unwrapAngle(double ref, double angle) {
@@ -155,7 +152,7 @@ public final class SwerveSetpointGenerator {
             }
 
             if (allModulesShouldFlip) {
-                double requiredRotationRad = Math.abs(desiredHeading[i].getRadians() - prevHeading[i].getRadians());
+                double requiredRotationRad = Math.abs(inverseWithTrig(prevHeading[i]).rotateBy(desiredHeading[i]).getRadians());
                 if (requiredRotationRad < Math.PI / 2.0) {
                     allModulesShouldFlip = false;
                 }
@@ -200,13 +197,14 @@ public final class SwerveSetpointGenerator {
                     continue;
                 }
 
-                double necessaryRotation = desiredModuleState[i].angle.getRadians()
-                        - prevSetpoints.moduleStates[i].angle.getRadians();
-                if (flipHeading(necessaryRotation))
-                    necessaryRotation += Math.PI;
+                var necessaryRotation = inverseWithTrig(prevSetpoints.moduleStates[i].angle).rotateBy(
+                        desiredModuleState[i].angle);
+                if (flipHeading(necessaryRotation)) {
+                    necessaryRotation = necessaryRotation.rotateBy(new Rotation2d(Math.PI));
+                }
 
-                necessaryRotation = MathUtil.wrap(necessaryRotation, -Math.PI, Math.PI);
-                final double numStepsNeeded = Math.abs(necessaryRotation) / maxThetaStep;
+                double wrappedNecessaryRotation = MathUtil.wrap(necessaryRotation.getRadians(), -Math.PI, Math.PI);
+                final double numStepsNeeded = Math.abs(wrappedNecessaryRotation) / maxThetaStep;
 
                 if (numStepsNeeded <= 1.0) {
                     // Steer directly to goal angle.
@@ -215,7 +213,7 @@ public final class SwerveSetpointGenerator {
                 } else {
                     // Adjust steering by maxThetaStep.
                     overrideSteering.set(i, Optional.of(prevSetpoints.moduleStates[i].angle.rotateBy(
-                            Rotation2d.fromRadians(Math.signum(necessaryRotation) * maxThetaStep))));
+                            Rotation2d.fromRadians(Math.signum(necessaryRotation.getRadians()) * maxThetaStep))));
                     minS = 0.0;
                 }
                 continue;
