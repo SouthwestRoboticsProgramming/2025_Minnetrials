@@ -22,6 +22,8 @@ public final class LightsSubsystem extends SubsystemBase {
     private final Debouncer batteryLowDebounce;
     private final PrideSequencer prideSequencer;
 
+    private Color commandRequest = null;
+
     public LightsSubsystem(RobotContainer robot) {
         this.robot = robot;
         leds = new AddressableLED(IOAllocation.RIO.PWM_LEDS);
@@ -61,13 +63,18 @@ public final class LightsSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        boolean overCurrent = robot.pdp.getInputs().pdpTotalCurrent > Constants.kLedCurrentShutoffThreshold;
         boolean overheating = robot.temperatureTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
-        if (overheating) {
+        if (overCurrent) {
+            applySolid(Color.kBlack); // Black means LEDs off
+        } else if (overheating) {
             showOverheating();
         } else if (batteryLowDebounce.calculate(batteryLow)) {
             showLowBattery();
+        } else if (commandRequest != null) {
+            applySolid(commandRequest);
         } else if (DriverStation.isDisabled()) {
             prideSequencer.apply(this);
         } else if (robot.drive.getLastSelectedPriority() == SwerveDriveSubsystem.Priority.AUTO) {
@@ -75,6 +82,8 @@ public final class LightsSubsystem extends SubsystemBase {
         } else {
             showIdle();
         }
+
+        commandRequest = null;
     }
 
     private void applySolid(Color color) {
@@ -146,5 +155,9 @@ public final class LightsSubsystem extends SubsystemBase {
 
     public void disabledInit() {
         prideSequencer.reset();
+    }
+
+    public void setCommandRequest(Color color) {
+        commandRequest = color;
     }
 }

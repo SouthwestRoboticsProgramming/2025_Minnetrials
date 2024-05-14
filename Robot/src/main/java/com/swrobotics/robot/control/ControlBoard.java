@@ -7,6 +7,7 @@ import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
+import com.swrobotics.robot.commands.LightCommands;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
@@ -15,6 +16,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -46,6 +48,9 @@ public final class ControlBoard extends SubsystemBase {
         // Gyro reset buttons
         driver.start.onFalling(() -> robot.drive.setRotation(new Rotation2d()));
         driver.back.onFalling(() -> robot.drive.setRotation(new Rotation2d())); // Two buttons to reset gyro so the driver can't get confused
+
+        // Test LEDs
+        driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
 
         driveFilter = new DriveAccelFilter(Constants.kDriveControlMaxAccel);
 

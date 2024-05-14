@@ -119,6 +119,7 @@ public final class Constants {
     // Lights
     public static final int kLedStripLength = 22;
     public static final int kLowBatteryThreshold = 10; // Volts
+    public static final int kLedCurrentShutoffThreshold = 250; // Amps
 
     // Temperature
     public static final double kTemperatureInterval = 2; // Seconds
