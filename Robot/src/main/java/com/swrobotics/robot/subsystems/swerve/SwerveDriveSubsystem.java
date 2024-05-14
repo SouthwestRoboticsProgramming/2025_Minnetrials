@@ -5,6 +5,7 @@ import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 
 import com.swrobotics.robot.subsystems.swerve.io.*;
+import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 import edu.wpi.first.wpilibj.DriverStation;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
@@ -57,6 +58,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
     private static final DriveRequest NULL_DRIVE = new DriveRequest(Priority.IDLE, new Translation2d(0, 0), DriveRequestType.OpenLoopVoltage);
     private static final TurnRequest NULL_TURN = new TurnRequest(Priority.IDLE, new Rotation2d(0));
 
+    private final TemperatureTrackerSubsystem temperatureTracker;
     private final GyroIO gyroIO;
     private final GyroIO.Inputs gyroInputs;
     private final SwerveModuleIO[] moduleIOs;
@@ -75,7 +77,8 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
     private SwerveKinematicLimits limits;
     private Priority lastSelectedPriority;
 
-    public SwerveDriveSubsystem() {
+    public SwerveDriveSubsystem(TemperatureTrackerSubsystem temperatureTracker) {
+        this.temperatureTracker = temperatureTracker;
         if (RobotBase.isReal()) {
             gyroIO = new NavXGyroIO();
         } else {
@@ -181,6 +184,12 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // if (overheating) { dont(); }
+        if (temperatureTracker.isOverheating() && !DriverStation.isFMSAttached()) {
+            currentDriveRequest = NULL_DRIVE;
+            currentTurnRequest = NULL_TURN;
+        }
+
         gyroIO.updateInputs(gyroInputs);
         Logger.processInputs("Gyro", gyroInputs);
 

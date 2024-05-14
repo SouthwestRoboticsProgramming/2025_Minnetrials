@@ -54,7 +54,7 @@ public class RobotContainer {
         temperatureTracker = new TemperatureTrackerSubsystem();
 
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
-        drive = new SwerveDriveSubsystem();
+        drive = new SwerveDriveSubsystem(temperatureTracker);
         lights = new LightsSubsystem(this);
 
         // ControlBoard must be initialized last
