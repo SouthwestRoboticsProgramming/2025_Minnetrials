@@ -13,9 +13,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
-
-import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 
 public final class LightsSubsystem extends SubsystemBase {
     private final RobotContainer robot;
@@ -25,7 +22,7 @@ public final class LightsSubsystem extends SubsystemBase {
     private final Debouncer batteryLowDebounce;
     private final PrideSequencer prideSequencer;
 
-    private Optional<Color> override = Optional.empty();
+    private Color commandRequest = null;
 
     public LightsSubsystem(RobotContainer robot) {
         this.robot = robot;
@@ -66,23 +63,18 @@ public final class LightsSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (robot.pdp.getInputs().pdpTotalCurrent > 250) { // FIXME: Set value
-            showIdle();
-            return;
-        }
-
-        if (override.isPresent()) {
-            applySolid(override.get());
-            return;
-        }
-
+        boolean overCurrent = robot.pdp.getInputs().pdpTotalCurrent > Constants.kLedCurrentShutoffThreshold;
         boolean overheating = robot.temperatureTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
-        if (overheating) {
+        if (overCurrent) {
+            applySolid(Color.kBlack); // Black means LEDs off
+        } else if (overheating) {
             showOverheating();
         } else if (batteryLowDebounce.calculate(batteryLow)) {
             showLowBattery();
+        } else if (commandRequest != null) {
+            applySolid(commandRequest);
         } else if (DriverStation.isDisabled()) {
             prideSequencer.apply(this);
         } else if (robot.drive.getLastSelectedPriority() == SwerveDriveSubsystem.Priority.AUTO) {
@@ -90,6 +82,8 @@ public final class LightsSubsystem extends SubsystemBase {
         } else {
             showIdle();
         }
+
+        commandRequest = null;
     }
 
     private void applySolid(Color color) {
@@ -163,7 +157,7 @@ public final class LightsSubsystem extends SubsystemBase {
         prideSequencer.reset();
     }
 
-    public void setOverride(Optional<Color> color) {
-        override = color;
+    public void setCommandRequest(Color color) {
+        commandRequest = color;
     }
 }
