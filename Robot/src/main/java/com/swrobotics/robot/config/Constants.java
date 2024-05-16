@@ -42,7 +42,6 @@ public final class Constants {
     // Drive
     private static final double kHalfSpacingX = 55.3 / 100 / 2; // m
     private static final double kHalfSpacingY = 63.0 / 100 / 2; // m
-    public static final double kWheelRadius = 1.9; // Inches
 
     public static final NTEntry<Double> kFrontLeftOffset = new NTDouble("Drive/Modules/Front Left Offset (rot)", 0).setPersistent();
     public static final NTEntry<Double> kFrontRightOffset = new NTDouble("Drive/Modules/Front Right Offset (rot)", 0).setPersistent();
@@ -56,9 +55,9 @@ public final class Constants {
     };
 
     public static final double kDriveRadius = Math.hypot(kHalfSpacingX, kHalfSpacingY);
-    public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s
+    public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s  TODO: Measure
 
-    public static final double kDriveDriftComp = 0.04; // dt for chassis speeds discretize
+    public static final double kDriveDriftComp = 0.04; // dt for chassis speeds discretize  TODO: Tune
 
     public static final double kDriveCurrentLimit = 40; // A
     public static final double kDriveCurrentLimitTime = 0.25; // sec
@@ -70,31 +69,19 @@ public final class Constants {
         kDriveLimits.kMaxSteeringVelocity = Math.toRadians(1500);
     }
 
-    private static final Slot0Configs kSteerGains = new Slot0Configs()
-            .withKP(100).withKD(0.05);
-    private static final Slot0Configs kDriveGains = new Slot0Configs()
-            .withKP(3).withKD(0);
-    private static final double kDriveSlipCurrent = 300; // A
-
-    private static final double kSwerveCoupleRatio = 50.0 / 16;
-    private static final double kDriveGearRatio = (50.0/16) * (16.0/28) * (45.0/15);
-    private static final double kSteerGearRatio = 150.0 / 7;
-
-    private static final boolean kSteerMotorReversed = true;
-
     public static final SwerveModuleConstantsFactory kSwerveConstantsFactory = new SwerveModuleConstantsFactory()
-            .withDriveMotorGearRatio(kDriveGearRatio)
-            .withSteerMotorGearRatio(kSteerGearRatio)
-            .withWheelRadius(kWheelRadius)
-            .withSlipCurrent(kDriveSlipCurrent)
-            .withSteerMotorGains(kSteerGains)
-            .withDriveMotorGains(kDriveGains)
+            .withDriveMotorGearRatio((50.0/16) * (16.0/28) * (45.0/15))
+            .withSteerMotorGearRatio(150.0 / 7)
+            .withWheelRadius(1.9) // Inches
+            .withSlipCurrent(300) // A  TODO Tune
+            .withSteerMotorGains(new Slot0Configs().withKP(100).withKD(0.05))
+            .withDriveMotorGains(new Slot0Configs().withKP(3).withKD(0))
             .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
             .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
             .withSpeedAt12VoltsMps(kMaxAchievableSpeed)
             .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
-            .withCouplingGearRatio(kSwerveCoupleRatio)
-            .withSteerMotorInverted(kSteerMotorReversed);
+            .withCouplingGearRatio(50.0 / 16)
+            .withSteerMotorInverted(true);
 
     // Vision
     public static final CameraCaptureProperties kVisionCaptureProps = new CameraCaptureProperties()
