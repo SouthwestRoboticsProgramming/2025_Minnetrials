@@ -1,7 +1,7 @@
-package com.swrobotics.robot.subsystems.tagtracker;
+package com.swrobotics.robot.subsystems.vision;
 
-import com.swrobotics.robot.subsystems.tagtracker.io.NTEnvironmentIO;
-import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerEnvironmentIO;
+import com.swrobotics.robot.subsystems.vision.tagtracker.NTEnvironmentIO;
+import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerEnvironmentIO;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Quaternion;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -13,13 +13,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class TagTrackerEnvironment {
+// FIXME: This should not read from TagTracker, should read from JSON file
+public final class AprilTagEnvironment {
     private final TagTrackerEnvironmentIO io;
     private final TagTrackerEnvironmentIO.Inputs inputs;
 
     private final Map<Integer, Pose3d> poses;
 
-    public TagTrackerEnvironment(DoubleArrayTopic topic) {
+    public AprilTagEnvironment(DoubleArrayTopic topic) {
         io = new NTEnvironmentIO(topic);
         inputs = new TagTrackerEnvironmentIO.Inputs();
 

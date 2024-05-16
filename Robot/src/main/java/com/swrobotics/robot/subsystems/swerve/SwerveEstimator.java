@@ -1,15 +1,21 @@
 package com.swrobotics.robot.subsystems.swerve;
 
+import com.swrobotics.lib.utils.Transformation3d;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.logging.FieldView;
-import com.swrobotics.robot.subsystems.tagtracker.TagTrackerInput;
+import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
+import com.swrobotics.robot.subsystems.vision.VisionInput;
+import com.swrobotics.robot.subsystems.vision.VisionUpdate;
+import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerInput;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import org.littletonrobotics.junction.Logger;
@@ -20,7 +26,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public final class SwerveEstimator {
-    private final TagTrackerInput tagTracker;
+    private final AprilTagEnvironment environment;
+    private final List<VisionInput> visionInputs;
 
     private Pose2d basePose, latestPose;
     private final TreeMap<Double, PoseUpdate> updates = new TreeMap<>();
@@ -32,33 +39,38 @@ public final class SwerveEstimator {
         double halfFrameL = 0.77 / 2;
         double halfFrameW = 0.695 / 2;
 
-        tagTracker = new TagTrackerInput(
-                new TagTrackerInput.CameraInfo(
-                        "front",
-                        (camPose) -> {
-                            return camPose
-                                    // Compensate for mounting angle
-//                                    .transformBy(new Transform3d(new Translation3d(), new Rotation3d(Math.PI, Math.toRadians(90-67), 0)))
-                                    .transformBy(new Transform3d(new Translation3d(), new Rotation3d(Math.PI, 0, 0)))
-                                    .transformBy(new Transform3d(new Translation3d(), new Rotation3d(0, Math.toRadians(90-67), 0)))
-                                    // Compensate for mounting position
-                                    .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.046, -halfFrameW + 0.12, 0.19).unaryMinus(), new Rotation3d()));
-                        },
-                        Constants.kVisionCaptureProps,
-                        5), // meters
+        environment = new AprilTagEnvironment(NetworkTableInstance.getDefault()
+                .getDoubleArrayTopic("TagTracker/environment"));
 
-                new TagTrackerInput.CameraInfo(
-                        "zoom",
-                        (camPose) -> {
-                            return camPose
-                                    // Compensate for mounting angle
-                                    .transformBy(new Transform3d(new Translation3d(), new Rotation3d(0, Math.toRadians(16.88), 0)))
-                                    // Compensate for mounting position
-                                    .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.16, halfFrameW - 0.133, 0.39).unaryMinus(), new Rotation3d()));
-                        },
-                        Constants.kVisionCaptureProps,
-                        Double.POSITIVE_INFINITY) // Trust at all distances
-        );
+        Transformation3d frontTransform = (camPose) -> camPose
+                // Compensate for mounting angle
+                .transformBy(new Transform3d(new Translation3d(), new Rotation3d(Math.PI, 0, 0)))
+                .transformBy(new Transform3d(new Translation3d(), new Rotation3d(0, Math.toRadians(90 - 67), 0)))
+                // Compensate for mounting position
+                .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.046, -halfFrameW + 0.12, 0.19).unaryMinus(), new Rotation3d()));
+
+        Transformation3d zoomTransform = (camPose) -> camPose
+                // Compensate for mounting angle
+                .transformBy(new Transform3d(new Translation3d(), new Rotation3d(0, Math.toRadians(16.88), 0)))
+                // Compensate for mounting position
+                .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.16, halfFrameW - 0.133, 0.39).unaryMinus(), new Rotation3d()));
+
+        visionInputs = new ArrayList<>();
+        visionInputs.add(new TagTrackerInput(
+                "front",
+                environment,
+                frontTransform,
+                new RawAprilTagInput.FilterParameters(Constants.kTagTrackerFilterParams)
+                        .setMaxTrustDistance(5),
+                Constants.kTagTrackerCaptureProps
+        ));
+        visionInputs.add(new TagTrackerInput(
+                "zoom",
+                environment,
+                zoomTransform,
+                Constants.kTagTrackerFilterParams,
+                Constants.kTagTrackerCaptureProps
+        ));
 
         latestPose = new Pose2d();
         basePose = new Pose2d();
@@ -111,11 +123,14 @@ public final class SwerveEstimator {
 
         // Sample vision data before updating drive so the drive is guaranteed
         // to be the most recent update
-        List<TagTrackerInput.VisionUpdate> visionData = tagTracker.getNewUpdates();
+        List<VisionUpdate> visionData = new ArrayList<>();
+        for (VisionInput input : visionInputs) {
+            visionData.addAll(input.getNewUpdates());
+        }
         updates.put(Timer.getFPGATimestamp(), new PoseUpdate(driveTwist, new ArrayList<>()));
 
         List<Pose2d> tagPoses = new ArrayList<>();
-        for (Pose3d tagPose3d : tagTracker.getEnvironment().getAllPoses()) {
+        for (Pose3d tagPose3d : environment.getAllPoses()) {
             tagPoses.add(tagPose3d.toPose2d());
         }
         FieldView.aprilTagPoses.setPoses(tagPoses);
@@ -125,11 +140,11 @@ public final class SwerveEstimator {
             return;
         }
 
-        for (TagTrackerInput.VisionUpdate visionUpdate : visionData) {
+        for (VisionUpdate visionUpdate : visionData) {
             double timestamp = visionUpdate.timestamp;
 
             if (updates.containsKey(timestamp)) {
-                List<TagTrackerInput.VisionUpdate> oldUpdates = updates.get(timestamp).visionUpdates;
+                List<VisionUpdate> oldUpdates = updates.get(timestamp).visionUpdates;
                 oldUpdates.add(visionUpdate);
                 oldUpdates.sort(this::compareStdDevs);
             } else {
@@ -146,7 +161,7 @@ public final class SwerveEstimator {
                         nextUpdate.getValue().twist,
                         (nextUpdate.getKey() - timestamp) / (nextUpdate.getKey() - prevUpdate.getKey()));
 
-                List<TagTrackerInput.VisionUpdate> newVisionUpdates = new ArrayList<>();
+                List<VisionUpdate> newVisionUpdates = new ArrayList<>();
                 newVisionUpdates.add(visionUpdate);
 
                 // Insert new update entry for this vision update
@@ -177,7 +192,7 @@ public final class SwerveEstimator {
         FieldView.robotPose.setPose(latestPose);
         List<Pose2d> visionPoses = new ArrayList<>();
         for (PoseUpdate update : updates.values()) {
-            for (TagTrackerInput.VisionUpdate visionUpdate : update.visionUpdates) {
+            for (VisionUpdate visionUpdate : update.visionUpdates) {
                 visionPoses.add(visionUpdate.estPose);
             }
         }
@@ -187,7 +202,7 @@ public final class SwerveEstimator {
         Logger.recordOutput("Drive/Vision Estimates", visionPoses.toArray(new Pose2d[0]));
     }
 
-    private int compareStdDevs(TagTrackerInput.VisionUpdate u1, TagTrackerInput.VisionUpdate u2) {
+    private int compareStdDevs(VisionUpdate u1, VisionUpdate u2) {
         return -Double.compare(
                 u1.stdDevs.get(0, 0) + u1.stdDevs.get(1, 0),
                 u2.stdDevs.get(0, 0) + u2.stdDevs.get(1, 0)
@@ -196,9 +211,9 @@ public final class SwerveEstimator {
 
     private static final class PoseUpdate {
         public final Twist2d twist;
-        public final List<TagTrackerInput.VisionUpdate> visionUpdates;
+        public final List<VisionUpdate> visionUpdates;
 
-        public PoseUpdate(Twist2d twist, List<TagTrackerInput.VisionUpdate> visionUpdates) {
+        public PoseUpdate(Twist2d twist, List<VisionUpdate> visionUpdates) {
             this.twist = twist;
             this.visionUpdates = visionUpdates;
         }
@@ -206,7 +221,7 @@ public final class SwerveEstimator {
         public Pose2d apply(Pose2d prevPose, Matrix<N3, N1> q) {
             Pose2d pose = prevPose.exp(twist);
 
-            for (TagTrackerInput.VisionUpdate visionUpdate : visionUpdates) {
+            for (VisionUpdate visionUpdate : visionUpdates) {
                 Matrix<N3, N3> visionK = new Matrix<>(Nat.N3(), Nat.N3());
                 double[] r = new double[3];
                 for (int i = 0; i < 3; i++)

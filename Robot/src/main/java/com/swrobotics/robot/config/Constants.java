@@ -9,7 +9,8 @@ import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
 import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
-import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
+import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProperties;
 import edu.wpi.first.math.util.Units;
 
 // Use NTEntry when you want tunable
@@ -84,17 +85,19 @@ public final class Constants {
             .withSteerMotorInverted(true);
 
     // Vision
-    public static final CameraCaptureProperties kVisionCaptureProps = new CameraCaptureProperties()
+    public static final TagTrackerCaptureProperties kTagTrackerCaptureProps = new TagTrackerCaptureProperties()
             .setAutoExposure(false)
             .setExposure(20)
             .setGain(1)
             .setTargetFps(50);
 
-    public static final double kVisionAmbiguityThreshold = 0.9;
-    public static final double kVisionFieldBorderMargin = 0.5;
-    public static final double kVisionZMargin = 0.75;
-    public static final double kVisionXYStdDevCoeff = 0.01;
-    public static final double kVisionThetaStdDevCoeff = 0.01;
+    public static final RawAprilTagInput.FilterParameters kTagTrackerFilterParams = new RawAprilTagInput.FilterParameters()
+            .setAmbiguityThreshold(0.9)
+            .setXYStdDevCoefficient(0.01)
+            .setThetaStdDevCoefficient(0.01)
+            .setFieldBorderMargin(0.5)
+            .setZMargin(0.75)
+            .setMaxTrustDistance(Double.POSITIVE_INFINITY);
 
     public static final double[] kVisionStateStdDevs = {0.005, 0.005, 0.001};
     public static final double kVisionHistoryTime = 0.3; // Secs

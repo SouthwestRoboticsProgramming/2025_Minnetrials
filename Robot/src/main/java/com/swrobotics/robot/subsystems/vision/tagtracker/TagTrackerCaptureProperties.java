@@ -1,27 +1,27 @@
-package com.swrobotics.robot.subsystems.tagtracker;
+package com.swrobotics.robot.subsystems.vision.tagtracker;
 
-public final class CameraCaptureProperties {
+public final class TagTrackerCaptureProperties {
     private boolean autoExposure = false;
     private double exposure = 30;
     private double gain = 1;
     private double targetFps = 50;
 
-    public CameraCaptureProperties setAutoExposure(boolean autoExposure) {
+    public TagTrackerCaptureProperties setAutoExposure(boolean autoExposure) {
         this.autoExposure = autoExposure;
         return this;
     }
 
-    public CameraCaptureProperties setExposure(double exposure) {
+    public TagTrackerCaptureProperties setExposure(double exposure) {
         this.exposure = exposure;
         return this;
     }
 
-    public CameraCaptureProperties setGain(double gain) {
+    public TagTrackerCaptureProperties setGain(double gain) {
         this.gain = gain;
         return this;
     }
 
-    public CameraCaptureProperties setTargetFps(double targetFps) {
+    public TagTrackerCaptureProperties setTargetFps(double targetFps) {
         this.targetFps = targetFps;
         return this;
     }

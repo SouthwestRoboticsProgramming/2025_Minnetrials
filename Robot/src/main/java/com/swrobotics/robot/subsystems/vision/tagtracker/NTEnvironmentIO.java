@@ -1,4 +1,4 @@
-package com.swrobotics.robot.subsystems.tagtracker.io;
+package com.swrobotics.robot.subsystems.vision.tagtracker;
 
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.DoubleArrayTopic;

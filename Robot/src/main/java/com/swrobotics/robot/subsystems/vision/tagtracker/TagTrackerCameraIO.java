@@ -1,13 +1,13 @@
-package com.swrobotics.robot.subsystems.tagtracker.io;
+package com.swrobotics.robot.subsystems.vision.tagtracker;
 
-import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
+import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProperties;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 public interface TagTrackerCameraIO {
     void updateInputs(Inputs inputs);
 
-    void setCaptureProperties(CameraCaptureProperties props);
+    void setCaptureProperties(TagTrackerCaptureProperties props);
 
     final class Inputs implements LoggableInputs {
         // false value to indicate no estimate

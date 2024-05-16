@@ -1,7 +1,5 @@
-package com.swrobotics.robot.subsystems.tagtracker;
+package com.swrobotics.robot.subsystems.vision.tagtracker;
 
-import com.swrobotics.robot.subsystems.tagtracker.io.NTCameraIO;
-import com.swrobotics.robot.subsystems.tagtracker.io.TagTrackerCameraIO;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -128,7 +126,7 @@ public final class TagTrackerCamera {
     private final TagTrackerCameraIO io;
     private final TagTrackerCameraIO.Inputs inputs;
 
-    public TagTrackerCamera(String name, NetworkTable table, Function<Pose3d, Pose3d> cameraToRobot, CameraCaptureProperties captureProps, double maxTrustDistance) {
+    public TagTrackerCamera(String name, NetworkTable table, Function<Pose3d, Pose3d> cameraToRobot, TagTrackerCaptureProperties captureProps, double maxTrustDistance) {
         this.name = name;
 //        this.toRobotTransform = toRobotTransform;
         this.cameraToRobot = cameraToRobot;

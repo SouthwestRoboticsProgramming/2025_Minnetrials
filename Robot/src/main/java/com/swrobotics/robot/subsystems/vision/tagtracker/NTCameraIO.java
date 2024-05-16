@@ -1,6 +1,5 @@
-package com.swrobotics.robot.subsystems.tagtracker.io;
+package com.swrobotics.robot.subsystems.vision.tagtracker;
 
-import com.swrobotics.robot.subsystems.tagtracker.CameraCaptureProperties;
 import edu.wpi.first.networktables.*;
 
 public final class NTCameraIO implements TagTrackerCameraIO {
@@ -26,7 +25,7 @@ public final class NTCameraIO implements TagTrackerCameraIO {
     }
 
     @Override
-    public void setCaptureProperties(CameraCaptureProperties props) {
+    public void setCaptureProperties(TagTrackerCaptureProperties props) {
         autoExposurePub.set(props.isAutoExposure());
         exposurePub.set(props.getExposure());
         gainPub.set(props.getGain());
