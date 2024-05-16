@@ -15,11 +15,11 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import org.littletonrobotics.junction.Logger;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +39,13 @@ public final class SwerveEstimator {
         double halfFrameL = 0.77 / 2;
         double halfFrameW = 0.695 / 2;
 
-        environment = new AprilTagEnvironment(NetworkTableInstance.getDefault()
-                .getDoubleArrayTopic("TagTracker/environment"));
+        try {
+            environment = AprilTagEnvironment.load("crescendo_field.json");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load AprilTag environment!", e);
+        }
+
+        TagTrackerInput.publishTagEnvironment(environment);
 
         Transformation3d frontTransform = (camPose) -> camPose
                 // Compensate for mounting angle
@@ -129,6 +134,7 @@ public final class SwerveEstimator {
         }
         updates.put(Timer.getFPGATimestamp(), new PoseUpdate(driveTwist, new ArrayList<>()));
 
+//        environment.update();
         List<Pose2d> tagPoses = new ArrayList<>();
         for (Pose3d tagPose3d : environment.getAllPoses()) {
             tagPoses.add(tagPose3d.toPose2d());

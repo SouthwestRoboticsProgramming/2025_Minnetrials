@@ -1,30 +1,38 @@
 package com.swrobotics.robot.subsystems.vision;
 
-import com.swrobotics.robot.subsystems.vision.tagtracker.NTEnvironmentIO;
-import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerEnvironmentIO;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Quaternion;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.networktables.DoubleArrayTopic;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj.Filesystem;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-// FIXME: This should not read from TagTracker, should read from JSON file
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class AprilTagEnvironment {
-    private final TagTrackerEnvironmentIO io;
-    private final TagTrackerEnvironmentIO.Inputs inputs;
+    public static AprilTagEnvironment load(String fileName) throws IOException {
+        return new ObjectMapper().readValue(
+                new File(Filesystem.getDeployDirectory(), fileName),
+                AprilTagEnvironment.class);
+    }
 
+    private final double tagSize;
     private final Map<Integer, Pose3d> poses;
 
-    public AprilTagEnvironment(DoubleArrayTopic topic) {
-        io = new NTEnvironmentIO(topic);
-        inputs = new TagTrackerEnvironmentIO.Inputs();
-
+    @JsonCreator
+    private AprilTagEnvironment(
+            @JsonProperty(required = true, value = "tags") List<JsonTag> tags,
+            @JsonProperty(required = true, value = "tag_size") double tagSize) {
+        this.tagSize = tagSize;
         poses = new HashMap<>();
+        for (JsonTag tag : tags) {
+            poses.put(tag.ID, tag.pose);
+        }
     }
 
     // Returns pose if tag exists, else null
@@ -36,31 +44,27 @@ public final class AprilTagEnvironment {
         return poses.values();
     }
 
-    public void update() {
-        io.updateInputs(inputs);
-        Logger.processInputs("TagTracker/Environment", inputs);
+    public double getTagSize() {
+        return tagSize;
+    }
 
-        if (!inputs.dataChanged)
-            return;
-        double[] data = inputs.packedData;
+    public Map<Integer, Pose3d> getPoseMap() {
+        return poses;
+    }
 
-        poses.clear();
-        for (int i = 0; i < data.length; i += 8) {
-            int tagId = (int) data[i];
+    private static final class JsonTag {
+        @JsonProperty("ID")
+        public int ID;
 
-            double tx = data[i + 1];
-            double ty = data[i + 2];
-            double tz = data[i + 3];
-            double qw = data[i + 4];
-            double qx = data[i + 5];
-            double qy = data[i + 6];
-            double qz = data[i + 7];
+        @JsonProperty
+        public Pose3d pose;
 
-            Translation3d translation = new Translation3d(tx, ty, tz);
-            Rotation3d rotation = new Rotation3d(new Quaternion(qw, qx, qy, qz));
-            Pose3d pose = new Pose3d(translation, rotation);
-
-            poses.put(tagId, pose);
+        @JsonCreator
+        public JsonTag(
+                @JsonProperty(required = true, value = "ID") int ID,
+                @JsonProperty(required = true, value = "pose") Pose3d pose) {
+            this.ID = ID;
+            this.pose = pose;
         }
     }
 }

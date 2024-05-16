@@ -15,9 +15,40 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class TagTrackerInput extends RawAprilTagInput {
-    private static final String TABLE = "TagTracker/";
+    private static final String TABLE = "TagTracker";
+
+    public static void publishTagEnvironment(AprilTagEnvironment environment) {
+        Map<Integer, Pose3d> poses = environment.getPoseMap();
+
+        double[] data = new double[poses.size() * 8 + 1];
+        data[0] = environment.getTagSize();
+        int i = 1;
+        for (Map.Entry<Integer, Pose3d> entry : poses.entrySet()) {
+            data[i] = entry.getKey();
+
+            Pose3d pose = entry.getValue();
+            Translation3d tx = pose.getTranslation();
+            Quaternion q = pose.getRotation().getQuaternion();
+
+            data[i + 1] = tx.getX();
+            data[i + 2] = tx.getY();
+            data[i + 3] = tx.getZ();
+            data[i + 4] = q.getW();
+            data[i + 5] = q.getX();
+            data[i + 6] = q.getY();
+            data[i + 7] = q.getZ();
+
+            i += 8;
+        }
+
+        NetworkTableInstance.getDefault()
+                .getTable(TABLE)
+                .getEntry("Environment")
+                .setDoubleArray(data);
+    }
 
     private final String name;
     private final TagTrackerCameraIO io;
@@ -33,7 +64,7 @@ public final class TagTrackerInput extends RawAprilTagInput {
         this.name = name;
 
         NetworkTable table = NetworkTableInstance.getDefault()
-                .getTable(TABLE + name);
+                .getTable(TABLE + "/Cameras/" + name);
         io = new NTCameraIO(table);
         inputs = new TagTrackerCameraIO.Inputs();
 
