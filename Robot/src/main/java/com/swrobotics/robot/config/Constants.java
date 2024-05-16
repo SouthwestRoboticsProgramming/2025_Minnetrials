@@ -18,6 +18,9 @@ import edu.wpi.first.math.util.Units;
 // TODO: We might want to come up with a different solution than persistent values
 //  since persistent values never go away
 public final class Constants {
+    public static final int kPeriodicFreq = 50; // Hz
+    public static final double kPeriodicTime = 1.0 / kPeriodicFreq;
+
     // We don't know what the 2025 field is yet :(
     public static final FieldInfo kField = FieldInfo.CRESCENDO_2024;
 
@@ -58,7 +61,7 @@ public final class Constants {
     public static final double kDriveRadius = Math.hypot(kHalfSpacingX, kHalfSpacingY);
     public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s  TODO: Measure
 
-    public static final double kDriveDriftComp = 0.04; // dt for chassis speeds discretize  TODO: Tune
+    public static final double kDriveDriftComp = kPeriodicTime * 2; // dt for chassis speeds discretize  TODO: Tune
 
     public static final double kDriveCurrentLimit = 40; // A
     public static final double kDriveCurrentLimitTime = 0.25; // sec

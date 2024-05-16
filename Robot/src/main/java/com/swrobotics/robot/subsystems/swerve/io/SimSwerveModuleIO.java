@@ -2,6 +2,7 @@ package com.swrobotics.robot.subsystems.swerve.io;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.swrobotics.lib.utils.MathUtil;
+import com.swrobotics.robot.config.Constants;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public final class SimSwerveModuleIO extends SwerveModuleIO {
@@ -19,7 +20,7 @@ public final class SimSwerveModuleIO extends SwerveModuleIO {
 
     @Override
     public void updateInputs(Inputs inputs) {
-        simDistance += state.speedMetersPerSecond * 0.02;
+        simDistance += state.speedMetersPerSecond * Constants.kPeriodicTime;
 
         inputs.angle = state.angle.getRotations();
         inputs.canCoderPos = MathUtil.wrap(inputs.angle + magnetOffset, 0, 1);

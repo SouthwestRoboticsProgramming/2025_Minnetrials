@@ -1,8 +1,10 @@
 package com.swrobotics.robot.subsystems.swerve.io;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
+import com.ctre.phoenix6.hardware.ParentDevice;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.swrobotics.robot.config.Constants;
@@ -33,6 +35,16 @@ public final class CtreSwerveModuleIO extends SwerveModuleIO {
         MusicSubsystem.getInstance().addInstrument(module.getSteerMotor());
         TemperatureTrackerSubsystem.getInstance().addMotor(name + " Drive", canBus, module.getDriveMotor());
         TemperatureTrackerSubsystem.getInstance().addMotor(name + " Steer", canBus, module.getSteerMotor());
+
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                Constants.kPeriodicFreq,
+                module.getDriveMotor().getPosition(),
+                module.getDriveMotor().getVelocity(),
+                module.getSteerMotor().getPosition(),
+                module.getSteerMotor().getVelocity(),
+                canCoderPosition
+        );
+        ParentDevice.optimizeBusUtilizationForAll(module.getDriveMotor(), module.getSteerMotor(), module.getCANcoder());
     }
 
     @Override
