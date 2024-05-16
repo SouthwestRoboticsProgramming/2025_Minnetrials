@@ -133,7 +133,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
                         Constants.kMaxAchievableSpeed,
                         Constants.kDriveRadius,
                         new ReplanningConfig(),
-                        0.020),
+                        Constants.kPeriodicTime),
                 () -> FieldInfo.getAlliance() == DriverStation.Alliance.Red,
                 this);
 
@@ -235,7 +235,8 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
 
             // Apply the drive request
             requestedSpeeds = ChassisSpeeds.discretize(requestedSpeeds, Constants.kDriveDriftComp);
-            SwerveSetpoints setpoints = setpointGenerator.generateSetpoint(limits, prevSetpoints, requestedSpeeds, 0.02);
+            SwerveSetpoints setpoints = setpointGenerator.generateSetpoint(
+                    limits, prevSetpoints, requestedSpeeds, Constants.kPeriodicTime);
             SwerveModuleState[] moduleSetpoints = setpoints.moduleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
                 moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
