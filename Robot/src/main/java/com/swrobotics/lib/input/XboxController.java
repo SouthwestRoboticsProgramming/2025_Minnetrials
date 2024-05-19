@@ -3,6 +3,7 @@ package com.swrobotics.lib.input;
 import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -81,6 +82,10 @@ public final class XboxController extends InputSource {
     public void setRumble(double amount) {
         xbox.setRumble(GenericHID.RumbleType.kLeftRumble, amount);
         xbox.setRumble(GenericHID.RumbleType.kRightRumble, amount);
+    }
+
+    public void setRumble(RumbleType type, double amount) {
+        xbox.setRumble(type, amount);
     }
 
     public Translation2d getLeftStick() {
