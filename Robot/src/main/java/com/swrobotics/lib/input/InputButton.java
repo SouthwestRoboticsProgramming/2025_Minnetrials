@@ -91,13 +91,17 @@ public final class InputButton implements InputElement {
         return this;
     }
 
-    public InputButton onHeld(Command command) {
+    public InputButton onHeld(Command command, double seconds) {
         onRising(() -> CommandScheduler.getInstance().schedule(
             new WaitCommand(1)
             .andThen(
                 command.asProxy()
                 .unless(() -> !isPressed()))));
         return this;
+    }
+
+    public InputButton onHeld(Command command) {
+        return onHeld(command, 1.0);
     }
 
     @Override
