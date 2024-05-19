@@ -2,6 +2,7 @@ package com.swrobotics.lib.input;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,15 @@ public final class InputButton implements InputElement {
 
     public InputButton onFalling(Command command) {
         onFalling(() -> CommandScheduler.getInstance().schedule(command));
+        return this;
+    }
+
+    public InputButton onHeld(Command command) {
+        onRising(() -> CommandScheduler.getInstance().schedule(
+            new WaitCommand(1)
+            .andThen(
+                command.asProxy()
+                .unless(() -> !isPressed()))));
         return this;
     }
 

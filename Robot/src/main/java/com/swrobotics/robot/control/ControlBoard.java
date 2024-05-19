@@ -52,6 +52,8 @@ public final class ControlBoard extends SubsystemBase {
         // Test LEDs
         driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
 
+        driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
+
         driveFilter = new DriveAccelFilter(Constants.kDriveControlMaxAccel);
 
         new Trigger(CHARACTERISE_WHEEL_RADIUS::get).whileTrue(new CharacterizeWheelsCommand(robot.drive));
