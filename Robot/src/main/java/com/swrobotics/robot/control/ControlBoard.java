@@ -5,13 +5,15 @@ import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.input.XboxController;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTEntry;
+import com.swrobotics.lib.net.NTInteger;
+import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
 import com.swrobotics.robot.commands.LightCommands;
+import com.swrobotics.robot.commands.RumblePatternCommands;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
-import com.swrobotics.lib.utils.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -21,6 +23,8 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public final class ControlBoard extends SubsystemBase {
+    private final NTInteger ENDGAME_ALERT_TIME = new NTInteger("Control/Endgame Alert Time", 15);
+
     /**
      * Driver:
      * Left stick: translation
@@ -51,6 +55,18 @@ public final class ControlBoard extends SubsystemBase {
 
         // Test LEDs
         driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
+
+
+        // Endgame Alert
+        /** Must restart robot code for the time change to take effect */
+        new Trigger(
+            () ->
+                DriverStation.isTeleopEnabled()
+                    && DriverStation.getMatchTime() > 0
+                    && DriverStation.getMatchTime() <= Math.round(ENDGAME_ALERT_TIME.get()))
+        .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75).alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
+
+        driver.b.onRising(RumblePatternCommands.endgameAlert(driver, 0.75));
 
         driveFilter = new DriveAccelFilter(Constants.kDriveControlMaxAccel);
 
