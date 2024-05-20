@@ -56,6 +56,7 @@ public final class ControlBoard extends SubsystemBase {
         // Test LEDs
         driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
 
+        driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
 
         // Endgame Alert
         /** Must restart robot code for the time change to take effect */
