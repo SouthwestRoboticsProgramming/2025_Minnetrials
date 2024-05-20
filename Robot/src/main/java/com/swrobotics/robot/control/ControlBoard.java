@@ -23,8 +23,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public final class ControlBoard extends SubsystemBase {
-    private final NTInteger ENDGAME_ALERT_A_TIME = new NTInteger("Control/Endgame Alert Time A", 20);
-    private final NTInteger ENDGAME_ALERT_B_TIME = new NTInteger("Control/Endgame Alert Time B", 5);
+    private final NTInteger ENDGAME_ALERT_TIME = new NTInteger("Control/Endgame Alert Time", 15);
 
     /**
      * Driver:
@@ -64,14 +63,7 @@ public final class ControlBoard extends SubsystemBase {
             () ->
                 DriverStation.isTeleopEnabled()
                     && DriverStation.getMatchTime() > 0
-                    && DriverStation.getMatchTime() <= Math.round(ENDGAME_ALERT_A_TIME.get()))
-        .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75).alongWith(RumblePatternCommands.endgameAlert(operator, 0.5)));
-
-        new Trigger(
-            () ->
-                DriverStation.isTeleopEnabled()
-                    && DriverStation.getMatchTime() > 0
-                    && DriverStation.getMatchTime() <= Math.round(ENDGAME_ALERT_B_TIME.get()))
+                    && DriverStation.getMatchTime() <= Math.round(ENDGAME_ALERT_TIME.get()))
         .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75).alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
 
         driver.b.onRising(RumblePatternCommands.endgameAlert(driver, 0.75));

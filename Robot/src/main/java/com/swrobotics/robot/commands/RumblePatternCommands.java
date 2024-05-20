@@ -14,6 +14,8 @@ public class RumblePatternCommands {
 
     public static Command endgameAlert(XboxController controller, double power) {
         // 1 and 3 4
+
+
         return Commands.sequence(
             rumbleForTimeCommand(controller, RumbleType.kBothRumble, power, eightNoteSeconds * 2),
             new WaitCommand(eightNoteSeconds),
