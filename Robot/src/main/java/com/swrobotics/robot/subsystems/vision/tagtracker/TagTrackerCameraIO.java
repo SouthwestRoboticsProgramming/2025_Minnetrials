@@ -4,6 +4,7 @@ import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProper
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
+@SuppressWarnings("unused")
 public interface TagTrackerCameraIO {
     void updateInputs(Inputs inputs);
 
