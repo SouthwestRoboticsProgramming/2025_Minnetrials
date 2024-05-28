@@ -8,14 +8,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
-public class RumblePatternCommands {
+public final class RumblePatternCommands {
     private static final int BPM = 140;
     private static final double eightNoteSeconds = 60.0 / BPM / 2.0; // Assume 4:4
 
     public static Command endgameAlert(XboxController controller, double power) {
         // 1 and 3 4
-
-
         return Commands.sequence(
             rumbleForTimeCommand(controller, RumbleType.kBothRumble, power, eightNoteSeconds * 2),
             new WaitCommand(eightNoteSeconds),

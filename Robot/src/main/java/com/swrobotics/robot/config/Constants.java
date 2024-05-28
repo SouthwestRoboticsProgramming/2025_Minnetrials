@@ -7,6 +7,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
+import com.swrobotics.lib.net.NTInteger;
 import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
 import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
 import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
@@ -23,6 +24,7 @@ public final class Constants {
 
     // We don't know what the 2025 field is yet :(
     public static final FieldInfo kField = FieldInfo.CRESCENDO_2024;
+    public static final int kEndgameAlertTime = 15;
 
     // Controls
     public static final int kDriverControllerPort = 0;
