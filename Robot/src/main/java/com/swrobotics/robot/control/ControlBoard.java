@@ -6,7 +6,6 @@ import com.swrobotics.lib.input.XboxController;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.lib.net.NTInteger;
-import com.swrobotics.lib.utils.DriverStationUtil;
 import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
@@ -62,9 +61,10 @@ public final class ControlBoard extends SubsystemBase {
         new Trigger(
             () ->
                 DriverStation.isTeleopEnabled()
-                    && DriverStationUtil.isEnabledInMatchOrPractice()
+                    && DriverStation.getMatchTime() > 0
                     && DriverStation.getMatchTime() <= Constants.kEndgameAlertTime)
-        .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75).alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
+        .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75)
+                .alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
 
         driver.b.onRising(RumblePatternCommands.endgameAlert(driver, 0.75));
 
