@@ -89,6 +89,10 @@ public final class Constants {
             .withCouplingGearRatio(50.0 / 16)
             .withSteerMotorInverted(true);
 
+    // Pathfinding
+    public static final double kRobotRadius = 0.6202230647076; // m
+    public static final double kPathfindingTolerance = 0.2; // m
+
     // Vision
     public static final TagTrackerCaptureProperties kTagTrackerCaptureProps = new TagTrackerCaptureProperties()
             .setAutoExposure(false)

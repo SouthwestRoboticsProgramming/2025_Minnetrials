@@ -13,6 +13,9 @@ public final class FieldView {
     public static final FieldObject2d pathPlannerPath = field.getObject("PathPlanner path");
     public static final FieldObject2d pathPlannerSetpoint = field.getObject("PathPlanner setpoint");
 
+    public static final FieldObject2d pathfindingGoal = field.getObject("Pathfinding goal");
+    public static final FieldObject2d pathfindingPath = field.getObject("Pathfinding path");
+
     public static void publish() {
         SmartDashboard.putData("Field View", field);
     }
