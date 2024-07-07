@@ -123,7 +123,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_find
 }
 
 fn into_java_array(env: &mut JNIEnv, values: Vec<f64>) -> Result<jdoubleArray, jni::errors::Error> {
-    let results = env.new_double_array(values.len() as i32).unwrap();
-    env.set_double_array_region(&results, 0, &values).unwrap();
+    let results = env.new_double_array(values.len() as i32)?;
+    env.set_double_array_region(&results, 0, &values)?;
     Ok(results.into_raw())
 }
