@@ -1,6 +1,5 @@
 package com.swrobotics.robot.pathfinding;
 
-import com.pathplanner.lib.commands.PathfindHolonomic;
 import edu.wpi.first.math.geometry.Translation2d;
 
 import java.util.ArrayList;
