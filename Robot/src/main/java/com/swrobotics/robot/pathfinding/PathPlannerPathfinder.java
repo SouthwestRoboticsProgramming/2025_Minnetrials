@@ -4,6 +4,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPoint;
 import com.pathplanner.lib.pathfinding.Pathfinder;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -73,7 +74,16 @@ public final class PathPlannerPathfinder implements Pathfinder {
     @Override
     public PathPlannerPath getCurrentPath(PathConstraints pathConstraints, GoalEndState goalEndState) {
         paramsChanged = false;
+
         List<Translation2d> bezierPoints = environment.findPath(startPos, goalPos);
+        if (bezierPoints == null) {
+            // PathPlanner won't accept impossible result, so give it a straight line as a fallback
+            // This can only happen if the target is inside an obstacle, which is pretty
+            // easy to avoid doing
+            DriverStation.reportWarning("Pathfinding: No path found", false);
+            bezierPoints = List.of(startPos, startPos, goalPos, goalPos);
+        }
+
         return new PathPlannerPath(bezierPoints, pathConstraints, goalEndState);
     }
 
