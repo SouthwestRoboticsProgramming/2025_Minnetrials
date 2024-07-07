@@ -42,6 +42,7 @@ public class RobotContainer {
     public final LoggedPowerDistribution pdp;
     public final TemperatureTrackerSubsystem temperatureTracker;
     public final SwerveDriveSubsystem drive;
+    public final PathfindingTest pathfindingTest;
 
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
@@ -62,7 +63,7 @@ public class RobotContainer {
         drive = new SwerveDriveSubsystem(temperatureTracker);
         lights = new LightsSubsystem(this);
 
-        PathfindingTest test = new PathfindingTest(drive);
+        pathfindingTest = new PathfindingTest(drive);
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);

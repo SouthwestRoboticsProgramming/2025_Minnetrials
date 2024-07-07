@@ -1,14 +1,17 @@
 package com.swrobotics.robot.subsystems;
 
+import com.pathplanner.lib.path.PathConstraints;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.pathfinding.Obstacle;
 import com.swrobotics.robot.pathfinding.PathEnvironment;
+import com.swrobotics.robot.pathfinding.PathPlannerPathfinder;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -31,6 +34,16 @@ public final class PathfindingTest extends SubsystemBase {
         }
 
         FieldView.pathfindingGoal.setPose(new Pose2d(new Translation2d(2, 2), new Rotation2d()));
+    }
+
+    public Command getFollowCommand() {
+        Pose2d goal = FieldView.pathfindingGoal.getPose();
+        return PathPlannerPathfinder.pathfindToPose(environment, goal, new PathConstraints(
+                Constants.kMaxAchievableSpeed,
+                Constants.kMaxAchievableSpeed / 0.7,
+                Constants.kDriveControlMaxTurnSpeed,
+                Constants.kDriveControlMaxTurnSpeed / 0.2
+        ));
     }
 
     @Override
