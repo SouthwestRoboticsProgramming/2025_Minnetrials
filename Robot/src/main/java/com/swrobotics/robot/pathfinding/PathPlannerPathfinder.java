@@ -54,24 +54,25 @@ public final class PathPlannerPathfinder implements Pathfinder {
     }
 
     public void setEnvironment(PathEnvironment environment) {
-        paramsChanged |= this.environment == environment;
+        paramsChanged |= this.environment != environment;
         this.environment = environment;
     }
 
     @Override
     public void setStartPosition(Translation2d startPos) {
-        paramsChanged |= this.startPos.equals(startPos);
+        paramsChanged |= !startPos.equals(this.startPos);
         this.startPos = startPos;
     }
 
     @Override
     public void setGoalPosition(Translation2d goalPos) {
-        paramsChanged |= this.goalPos.equals(goalPos);
+        paramsChanged |= !goalPos.equals(this.goalPos);
         this.goalPos = goalPos;
     }
 
     @Override
     public PathPlannerPath getCurrentPath(PathConstraints pathConstraints, GoalEndState goalEndState) {
+        paramsChanged = false;
         List<Translation2d> bezierPoints = environment.findPath(startPos, goalPos);
         return new PathPlannerPath(bezierPoints, pathConstraints, goalEndState);
     }

@@ -10,7 +10,7 @@ public final class PathfindingJNI {
 //    private static final String PROFILE = "debug";
     private static final String PROFILE = "release";
 
-    private static final String LIBRARY_NAME = "libpathfinding_jni";
+    private static final String LIBRARY_NAME = "pathfinding_jni";
 
     static {
         RuntimeType type = RuntimeType.getCurrent();
@@ -62,7 +62,7 @@ public final class PathfindingJNI {
         SIMULATION_LINUX {
             @Override
             Path getLibraryPath() {
-                return Paths.get("target/" + PROFILE + "/" + LIBRARY_NAME + ".so");
+                return Paths.get("target/" + PROFILE + "/lib" + LIBRARY_NAME + ".so");
             }
         };
 

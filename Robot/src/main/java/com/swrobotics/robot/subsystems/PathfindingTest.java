@@ -37,6 +37,7 @@ public final class PathfindingTest extends SubsystemBase {
     }
 
     public Command getFollowCommand() {
+        System.out.println("Pathfinding...");
         Pose2d goal = FieldView.pathfindingGoal.getPose();
         return PathPlannerPathfinder.pathfindToPose(environment, goal, new PathConstraints(
                 Constants.kMaxAchievableSpeed,
