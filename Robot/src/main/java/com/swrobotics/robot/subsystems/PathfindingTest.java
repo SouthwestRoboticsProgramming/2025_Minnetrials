@@ -6,11 +6,11 @@ import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.pathfinding.Obstacle;
 import com.swrobotics.robot.pathfinding.PathEnvironment;
 import com.swrobotics.robot.pathfinding.PathPlannerPathfinder;
+import com.swrobotics.robot.pathfinding.Rectangle;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
@@ -28,10 +28,18 @@ public final class PathfindingTest extends SubsystemBase {
 
         try {
             List<Obstacle> obstacles = Obstacle.loadFromJson("crescendo_pathfinding.json");
+            // Test overlapping obstacles
+            obstacles.add(new Rectangle(
+                    new Translation2d(8, 4),
+                    new Translation2d(6, 4),
+                    0
+            ));
             environment = new PathEnvironment(obstacles, Constants.kRobotRadius + Constants.kPathfindingTolerance);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        environment.getDebug().plot();
 
         FieldView.pathfindingGoal.setPose(new Pose2d(new Translation2d(2, 2), new Rotation2d()));
     }

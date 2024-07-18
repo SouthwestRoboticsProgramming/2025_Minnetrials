@@ -1,15 +1,16 @@
 package com.swrobotics.robot.pathfinding;
 
-import com.pathplanner.lib.commands.PathfindHolonomic;
 import edu.wpi.first.math.geometry.Translation2d;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public final class PathEnvironment {
+    private final List<Obstacle> obstacles;
     private final long handle;
 
     public PathEnvironment(List<Obstacle> obstacles, double avoidanceRadius) {
+        this.obstacles = obstacles;
         long obs = PathfindingJNI.newObstacleList();
         for (Obstacle obstacle : obstacles) {
             obstacle.addToJNIObstacleList(obs);
@@ -29,5 +30,9 @@ public final class PathEnvironment {
             bezierPoints.add(new Translation2d(x, y));
         }
         return bezierPoints;
+    }
+
+    public PathfindingDebug getDebug() {
+        return new PathfindingDebug(obstacles, PathfindingJNI.getDebugData(handle));
     }
 }

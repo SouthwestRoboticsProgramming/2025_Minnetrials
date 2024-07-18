@@ -1,14 +1,16 @@
 use std::{cmp::Ordering, collections::BinaryHeap, f64::consts::PI, rc::Rc};
 
 use arrayvec::ArrayVec;
+use itertools::Itertools;
 use lerp::Lerp;
 use ordered_float::OrderedFloat;
 
 use super::{
-    math::{self, Vec2f},
+    math::{self, wrap_angle, Vec2f},
     obstacle::Obstacle,
 };
 
+#[derive(Clone)]
 pub struct Arc {
     pub center: Vec2f,
     pub radius: f64,
@@ -45,6 +47,7 @@ impl Arc {
     }
 }
 
+#[derive(Clone)]
 pub struct Segment {
     pub from: Vec2f,
     pub to: Vec2f,
@@ -53,6 +56,202 @@ pub struct Segment {
 impl Segment {
     pub fn length(&self) -> f64 {
         (self.to - self.from).length()
+    }
+}
+
+// -------------------------
+
+pub struct EnvPolygon {
+    pub arcs: Vec<Arc>,
+    pub segments: Vec<Segment>,
+    pub inverted: bool,
+}
+
+fn angle_to_arc(arc: &Arc, point: Vec2f) -> f64 {
+    (point - arc.center).angle()
+}
+
+fn find_arc_segment_intersections(seg: &Segment, arc: &Arc, angles_out: &mut Vec<f64>) {
+    let rel = seg.from - arc.center;
+    let d = seg.to - seg.from;
+
+    let a = d.length_sq();
+    let b = 2.0 * (rel.x * d.x + rel.y * d.y);
+    let c = rel.length_sq() - arc.radius * arc.radius;
+
+    let disc = b * b - 4.0 * a * c;
+    if disc < 0.0 {
+        // No solutions
+        return;
+    }
+
+    let sqrt_disc = disc.sqrt();
+    let s1 = (-b + sqrt_disc) / (2.0 * a);
+    let s2 = (-b - sqrt_disc) / (2.0 * a);
+
+    if s1 >= 0.0 && s1 <= 1.0 {
+        let p = seg.from.lerp(seg.to, s1);
+        let angle = angle_to_arc(arc, p);
+        if arc.contains_angle(angle) {
+            angles_out.push(angle);
+        }
+    }
+    if s2 != s1 && s2 >= 0.0 && s2 <= 1.0 {
+        let p = seg.from.lerp(seg.to, s2);
+        let angle = angle_to_arc(arc, p);
+        if arc.contains_angle(angle) {
+            angles_out.push(angle);
+        }
+    }
+}
+
+// Based on https://gist.github.com/jupdike/bfe5eb23d1c395d8a0a1a4ddd94882ac
+// Returns angles relative to arc a
+fn find_arc_intersections(arc_a: &Arc, arc_b: &Arc, angles_out: &mut Vec<f64>) {
+    let d = arc_a.center - arc_b.center;
+    let r = d.length();
+    if (arc_a.radius - arc_b.radius).abs() > r || r > arc_a.radius + arc_b.radius {
+        return;
+    }
+
+    let r2 = r * r;
+    let r4 = r2 * r2;
+    let a = (arc_a.radius * arc_a.radius - arc_b.radius * arc_b.radius) / (2.0 * r2);
+    let r2r2 = arc_a.radius * arc_a.radius - arc_b.radius * arc_b.radius;
+    let c = (2.0 * (arc_a.radius * arc_a.radius + arc_b.radius * arc_b.radius) / r2
+        - (r2r2 * r2r2) / r4
+        - 1.0)
+        .sqrt();
+
+    let fx = (arc_a.center.x + arc_b.center.x) / 2.0 + a * (arc_b.center.x - arc_a.center.x);
+    let gx = c * (arc_b.center.y - arc_a.center.y) / 2.0;
+    let ix1 = fx + gx;
+    let ix2 = fx - gx;
+
+    let fy = (arc_a.center.y + arc_b.center.y) / 2.0 + a * (arc_b.center.y - arc_a.center.y);
+    let gy = c * (arc_a.center.x - arc_b.center.x) / 2.0;
+    let iy1 = fy + gy;
+    let iy2 = fy - gy;
+
+    let i1 = Vec2f::new(ix1, iy1);
+    let i2 = Vec2f::new(ix2, iy2);
+
+    let angle1 = angle_to_arc(arc_a, i1);
+    if arc_a.contains_angle(angle1) && arc_b.contains_angle(angle_to_arc(arc_b, i2)) {
+        angles_out.push(angle1);
+    }
+
+    let angle2 = angle_to_arc(arc_a, i2);
+    if (ix1 != ix2 || iy1 != iy2)
+        && arc_a.contains_angle(angle2)
+        && arc_b.contains_angle(angle_to_arc(arc_b, i2))
+    {
+        angles_out.push(angle2);
+    }
+}
+
+fn test_segment_intersects_horizontal(seg: &Segment, point: Vec2f) -> bool {
+    let s = (point.y - seg.from.y) / (seg.to.y - seg.from.y);
+    let ix = seg.from.x.lerp(seg.to.x, s);
+    s >= 0.0 && s <= 1.0 && ix >= point.x
+}
+
+fn test_arc_intersects_horizontal(arc: &Arc, point: Vec2f) -> usize {
+    let ry = point.y - arc.center.y;
+
+    let diff = arc.radius * arc.radius - ry * ry;
+    if diff < 0.0 {
+        return 0; // Does not intersect circle at all
+    }
+
+    let x_off = diff.sqrt();
+    let x_left = arc.center.x - x_off;
+    let x_right = arc.center.x + x_off;
+
+    // Intentionally counts tangent intersection as 2 intersections
+    let mut count = 0;
+    if x_left >= point.x && arc.contains_angle(angle_to_arc(arc, Vec2f::new(x_left, point.y))) {
+        count += 1;
+    }
+    if x_right >= point.x && arc.contains_angle(angle_to_arc(arc, Vec2f::new(x_right, point.y))) {
+        count += 1;
+    }
+    return count;
+}
+
+fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
+    let mut raw_angles = Vec::new();
+    for segment in &poly.segments {
+        find_arc_segment_intersections(segment, &to_clip, &mut raw_angles);
+    }
+    for arc in &poly.arcs {
+        find_arc_intersections(&to_clip, arc, &mut raw_angles);
+    }
+
+    let mut intersect_angles = Vec::new();
+    for angle in raw_angles {
+        let mut angle = wrap_angle(angle);
+        if angle < to_clip.min_angle {
+            angle += PI * 2.0;
+        }
+
+        let mut add = true;
+        for existing in &intersect_angles {
+            if (existing - angle) < 0.01 {
+                add = false;
+                break;
+            }
+        }
+        if add {
+            intersect_angles.push(angle);
+        }
+    }
+    intersect_angles.sort_by(|a, b| a.total_cmp(b));
+
+    for i in 0..(intersect_angles.len() + 1) {
+        let min_angle = if i == 0 {
+            to_clip.min_angle
+        } else {
+            intersect_angles[i - 1]
+        };
+        let mut max_angle = if i == intersect_angles.len() {
+            to_clip.max_angle
+        } else {
+            intersect_angles[i]
+        };
+
+        if max_angle < to_clip.min_angle {
+            max_angle += PI * 2.0;
+        }
+        if min_angle == max_angle && intersect_angles.len() != 0 {
+            continue;
+        }
+
+        let halfway = (max_angle + min_angle) / 2.0;
+        let test_point = to_clip.center + Vec2f::new_angle(to_clip.radius, halfway);
+
+        // Inside polygon if a horizontal ray to the right of the test point
+        // intersects it at an odd number of points
+        let mut intersect_count = if poly.inverted { 1 } else { 0 };
+        for segment in &poly.segments {
+            if test_segment_intersects_horizontal(segment, test_point) {
+                intersect_count += 1;
+            }
+        }
+        for arc in &poly.arcs {
+            intersect_count += test_arc_intersects_horizontal(arc, test_point);
+        }
+
+        if intersect_count % 2 == 0 {
+            // Outside the polygon, keep this piece of the arc
+            // FIXME: If the previous arc was also kept, they must be merged
+            out.push(Arc {
+                center: to_clip.center,
+                radius: to_clip.radius,
+                min_angle,
+                max_angle,
+            });
+        }
     }
 }
 
@@ -190,21 +389,72 @@ fn calc_turn_cost(incoming_angle: f64, outgoing_angle: f64, radius: f64, dir: Wi
 
 impl Environment {
     pub fn generate(obstacles: &Vec<Obstacle>, inflate: f64) -> Self {
-        let mut arcs = Vec::new();
-        let mut segments = Vec::new();
+        let polygons = obstacles
+            .iter()
+            .map(|obs| obs.convert_into_env(inflate))
+            .collect_vec();
 
-        for obstacle in obstacles {
-            obstacle.convert_into(inflate, &mut arcs, &mut segments);
+        let mut all_arcs = Vec::new();
+        let mut all_segments = Vec::new();
+        for i1 in 0..polygons.len() {
+            let to_clip = &polygons[i1];
+
+            let mut arcs = to_clip.arcs.clone();
+            for i2 in 0..polygons.len() {
+                if i1 == i2 {
+                    continue;
+                }
+                let against = &polygons[i2];
+
+                let mut clipped = Vec::new();
+                for arc in arcs {
+                    clip_arc(arc, &against, &mut clipped);
+                }
+                arcs = clipped;
+            }
+
+            all_arcs.append(&mut arcs);
+            all_segments.extend_from_slice(&to_clip.segments);
         }
 
+        // let mut arcs = Vec::new();
+        // let mut segments = Vec::new();
+
+        // for obstacle in obstacles {
+        //     obstacle.convert_into(inflate, &mut arcs, &mut segments);
+        // }
+
         let mut field = Self {
-            segments,
-            visibility: Vec::with_capacity(arcs.len() * 2),
-            arcs,
+            segments: all_segments,
+            visibility: Vec::with_capacity(all_arcs.len() * 2),
+            arcs: all_arcs,
         };
         field.calc_visibility();
 
         field
+    }
+
+    pub fn get_debug_data(&self) -> Vec<f64> {
+        let mut data = Vec::new();
+
+        data.push(self.arcs.len() as f64);
+        for arc in &self.arcs {
+            data.push(arc.center.x);
+            data.push(arc.center.y);
+            data.push(arc.radius);
+            data.push(arc.min_angle);
+            data.push(arc.max_angle);
+        }
+
+        data.push(self.segments.len() as f64);
+        for seg in &self.segments {
+            data.push(seg.from.x);
+            data.push(seg.from.y);
+            data.push(seg.to.x);
+            data.push(seg.to.y);
+        }
+
+        data
     }
 
     pub fn find_path(&self, mut start: Vec2f, goal: Vec2f) -> Option<Vec<PathArc>> {
@@ -238,6 +488,7 @@ impl Environment {
         let mut frontier = BinaryHeap::new();
 
         let mut start_changed = false;
+        // TODO: Make this more reliable
         for _ in 0..8 {
             for (arc_id, arc) in self.arcs.iter().enumerate() {
                 self.find_point_to_arc_tangents(start, &arc, arc_id, &mut tangents);

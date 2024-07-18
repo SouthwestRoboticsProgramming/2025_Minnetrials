@@ -122,6 +122,18 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_find
     }
 }
 
+#[no_mangle]
+pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_getDebugData<'local>(
+    mut env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    env_handle: jlong,
+) -> jdoubleArray {
+    let environment = unsafe { &mut *(env_handle as *mut pathfinding::Environment) };
+    let data = environment.get_debug_data();
+
+    into_java_array(&mut env, data).unwrap()
+}
+
 fn into_java_array(env: &mut JNIEnv, values: Vec<f64>) -> Result<jdoubleArray, jni::errors::Error> {
     let results = env.new_double_array(values.len() as i32)?;
     env.set_double_array_region(&results, 0, &values)?;

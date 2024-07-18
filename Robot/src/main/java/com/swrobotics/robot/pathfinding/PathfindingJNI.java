@@ -7,8 +7,8 @@ import java.nio.file.Paths;
 
 public final class PathfindingJNI {
     // Use debug for testing, release for performance
-//    private static final String PROFILE = "debug";
-    private static final String PROFILE = "release";
+    private static final String PROFILE = "debug";
+//    private static final String PROFILE = "release";
 
     private static final String LIBRARY_NAME = "pathfinding_jni";
 
@@ -42,6 +42,7 @@ public final class PathfindingJNI {
     // Returns null if path not found
     public static native double[] findPath(long envHandle, double startX, double startY, double goalX, double goalY);
 
+    public static native double[] getDebugData(long envHandle);
 
     // Not perfect platform compatibility, but good enough for our uses
     private enum RuntimeType {
