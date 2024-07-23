@@ -5,7 +5,6 @@ import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.input.XboxController;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTEntry;
-import com.swrobotics.lib.net.NTInteger;
 import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
