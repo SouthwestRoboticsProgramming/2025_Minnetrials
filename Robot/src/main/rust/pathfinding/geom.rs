@@ -10,6 +10,9 @@ use super::{
     obstacle::Obstacle,
 };
 
+// Maximum number of attempts made to get back into safe area if inside an obstacle
+const MAX_UNSTUCK_ATTEMPTS: usize = 8;
+
 #[derive(Clone)]
 pub struct Arc {
     pub center: Vec2f,
@@ -457,6 +460,72 @@ impl Environment {
         data
     }
 
+    pub fn debug_find_safe(&self, mut start: Vec2f) -> Vec<Vec2f> {
+        const MAX_ATTEMPTS: usize = 8;
+
+        let mut points = Vec::new();
+        let mut tangents: ArrayVec<_, 2> = ArrayVec::new();
+        points.push(start);
+
+        for _ in 0..MAX_ATTEMPTS {
+            // Check if we are inside the field bounds
+            let mut is_safe = false;
+            for (arc_id, arc) in self.arcs.iter().enumerate() {
+                self.find_point_to_arc_tangents(start, &arc, arc_id, &mut tangents);
+                if !tangents.is_empty() {
+                    is_safe = true;
+                    break;
+                }
+            }
+            if is_safe {
+                break;
+            }
+
+            let mut nearest = None;
+            for segment in &self.segments {
+                // Check if the start is on the "inside" of this edge (i.e. to
+                // the left of the edge)
+                let delta = segment.to - segment.from;
+                let perp = Vec2f::new(delta.y, -delta.x);
+                let rel = start - segment.from;
+                if rel.dot(perp) < 0.0 {
+                    continue;
+                }
+
+                let p1 = segment.from;
+                let p2 = segment.to;
+                let l2 = p2.distance_sq(p1);
+
+                let proj_point = if l2 == 0.0 {
+                    p1
+                } else {
+                    let t =
+                        ((start.x - p1.x) * (p2.x - p1.x) + (start.y - p1.y) * (p2.y - p1.y)) / l2;
+                    let t = t.clamp(0.0, 1.0);
+                    p1.lerp(p2, t)
+                };
+                let dist = start.distance_sq(proj_point);
+
+                if match nearest {
+                    Some((d, _)) => dist < d,
+                    None => true,
+                } {
+                    nearest = Some((dist, proj_point));
+                }
+            }
+
+            match nearest {
+                Some((_, proj_point)) => {
+                    start = proj_point + (proj_point - start).norm() * 0.05;
+                    points.push(start);
+                }
+                None => return points,
+            }
+        }
+
+        points
+    }
+
     pub fn find_path(&self, mut start: Vec2f, goal: Vec2f) -> Option<Vec<PathArc>> {
         if self.is_segment_passable(
             &Segment {
@@ -485,11 +554,12 @@ impl Environment {
             return None;
         }
 
-        let mut frontier = BinaryHeap::new();
+        let mut tangents: ArrayVec<_, 2> = ArrayVec::new();
 
+        let mut frontier = BinaryHeap::new();
         let mut start_changed = false;
-        // TODO: Make this more reliable
-        for _ in 0..8 {
+        for _ in 0..MAX_UNSTUCK_ATTEMPTS {
+            // Check if we are inside the field bounds
             for (arc_id, arc) in self.arcs.iter().enumerate() {
                 self.find_point_to_arc_tangents(start, &arc, arc_id, &mut tangents);
                 for tangent in &tangents {
@@ -504,40 +574,44 @@ impl Environment {
                     }));
                 }
             }
-
             if !frontier.is_empty() {
                 break;
             }
 
-            // Try to find a way back to the field
-            // This is somewhat goofy, but I don't care since it really shouldn't ever happen
-
-            let mut nearest_seg = None;
+            let mut nearest = None;
             for segment in &self.segments {
+                // Check if the start is on the "inside" of this edge (i.e. to
+                // the left of the edge)
+                let delta = segment.to - segment.from;
+                let perp = Vec2f::new(delta.y, -delta.x);
+                let rel = start - segment.from;
+                if rel.dot(perp) < 0.0 {
+                    continue;
+                }
+
                 let p1 = segment.from;
                 let p2 = segment.to;
+                let l2 = p2.distance_sq(p1);
 
-                let l2 = p1.distance_sq(p2);
-                let (dist, point) = if l2 == 0.0 {
-                    (start.distance_sq(p1), p1)
+                let proj_point = if l2 == 0.0 {
+                    p1
                 } else {
                     let t =
                         ((start.x - p1.x) * (p2.x - p1.x) + (start.y - p1.y) * (p2.y - p1.y)) / l2;
                     let t = t.clamp(0.0, 1.0);
-
-                    let pt = p1.lerp(p2, t);
-                    (start.distance_sq(pt), pt)
+                    p1.lerp(p2, t)
                 };
+                let dist = start.distance_sq(proj_point);
 
-                if match nearest_seg {
+                if match nearest {
                     Some((d, _)) => dist < d,
                     None => true,
                 } {
-                    nearest_seg = Some((dist, point));
+                    nearest = Some((dist, proj_point));
                 }
             }
 
-            match nearest_seg {
+            match nearest {
                 Some((_, proj_point)) => {
                     start = proj_point + (proj_point - start).norm() * 0.05;
                     start_changed = true;
@@ -545,6 +619,7 @@ impl Environment {
                 None => return None,
             }
         }
+
         if frontier.is_empty() {
             // Couldn't find a way back to safe area
             return None;

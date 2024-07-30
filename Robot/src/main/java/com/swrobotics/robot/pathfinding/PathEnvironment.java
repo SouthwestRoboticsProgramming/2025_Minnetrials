@@ -35,4 +35,15 @@ public final class PathEnvironment {
     public PathfindingDebug getDebug() {
         return new PathfindingDebug(obstacles, PathfindingJNI.getDebugData(handle));
     }
+
+    public List<Translation2d> debugFindSafe(Translation2d start) {
+        double[] data = PathfindingJNI.debugFindSafe(handle, start.getX(), start.getY());
+        List<Translation2d> points = new ArrayList<>();
+        for (int i = 0; i < data.length; i += 2) {
+            double x = data[i];
+            double y = data[i + 1];
+            points.add(new Translation2d(x, y));
+        }
+        return points;
+    }
 }

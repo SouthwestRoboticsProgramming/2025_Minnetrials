@@ -21,7 +21,7 @@ import java.util.List;
 
 public final class PathfindingTest extends SubsystemBase {
     private final SwerveDriveSubsystem drive;
-    private final PathEnvironment environment;
+    public final PathEnvironment environment;
 
     public PathfindingTest(SwerveDriveSubsystem drive) {
         this.drive = drive;

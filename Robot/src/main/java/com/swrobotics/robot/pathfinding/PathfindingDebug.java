@@ -2,6 +2,7 @@ package com.swrobotics.robot.pathfinding;
 
 import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.utils.MathUtil;
+import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.DebugGraphics;
 import com.swrobotics.robot.logging.FieldView;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -14,6 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class PathfindingDebug {
+    public static DebugGraphics g = new DebugGraphics("Pathfinding Debug", Constants.kField.getWidth(), Constants.kField.getHeight());
+
+
     public static final class Arc {
         public final double centerX, centerY;
         public final double radius;
@@ -60,9 +64,6 @@ public final class PathfindingDebug {
     }
 
     public void plot() {
-        FieldInfo field = FieldInfo.CRESCENDO_2024;
-        DebugGraphics g = new DebugGraphics("Pathfinding Debug", field.getWidth(), field.getHeight());
-
         for (Obstacle obs : obstacles) {
             if (obs instanceof Circle circle) {
                 List<Translation2d> points = new ArrayList<>();
@@ -91,6 +92,15 @@ public final class PathfindingDebug {
                     new Translation2d(seg.x1, seg.y1),
                     new Translation2d(seg.x2, seg.y2)
             ), Color.kYellow);
+
+            Translation2d center = new Translation2d((seg.x1 + seg.x2) / 2, (seg.y1 + seg.y2) / 2);
+            Translation2d perp = new Translation2d(seg.y1 - seg.y2, seg.x2 - seg.x1);
+            perp = perp.div(perp.getNorm()).times(0.2);
+
+            g.plotLines(List.of(
+                    center,
+                    center.plus(perp)
+            ), Color.kRed);
         }
 
         for (Arc arc : arcs) {

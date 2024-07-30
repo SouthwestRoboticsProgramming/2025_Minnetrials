@@ -73,6 +73,10 @@ impl Vec2f {
     pub fn norm(self) -> Self {
         self / self.length()
     }
+
+    pub fn dot(self, other: Vec2f) -> f64 {
+        self.x * other.x + self.y * other.y
+    }
 }
 
 impl Add for Vec2f {
