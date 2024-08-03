@@ -110,7 +110,17 @@ fn angle_to_arc(arc: &Arc, point: Vec2f) -> f64 {
     (point - arc.center).angle()
 }
 
-fn find_arc_segment_intersections(seg: &Segment, arc: &Arc, angles_out: &mut Vec<f64>) {
+struct ArcSegmentIntersection {
+    s: f64,     // S value along the segment
+    angle: f64, // Angle to the arc
+}
+
+fn find_arc_segment_intersection_common(
+    seg: &Segment,
+    arc: &Arc,
+) -> ArrayVec<ArcSegmentIntersection, 2> {
+    let mut out = ArrayVec::new();
+
     let rel = seg.from - arc.center;
     let d = seg.to - seg.from;
 
@@ -121,7 +131,7 @@ fn find_arc_segment_intersections(seg: &Segment, arc: &Arc, angles_out: &mut Vec
     let disc = b * b - 4.0 * a * c;
     if disc < 0.0 {
         // No solutions
-        return;
+        return out; // out is empty at this point
     }
 
     let sqrt_disc = disc.sqrt();
@@ -132,15 +142,30 @@ fn find_arc_segment_intersections(seg: &Segment, arc: &Arc, angles_out: &mut Vec
         let p = seg.from.lerp(seg.to, s1);
         let angle = angle_to_arc(arc, p);
         if arc.contains_angle(angle) {
-            angles_out.push(angle);
+            out.push(ArcSegmentIntersection { s: s1, angle });
         }
     }
     if s2 != s1 && s2 >= 0.0 && s2 <= 1.0 {
         let p = seg.from.lerp(seg.to, s2);
         let angle = angle_to_arc(arc, p);
         if arc.contains_angle(angle) {
-            angles_out.push(angle);
+            out.push(ArcSegmentIntersection { s: s2, angle });
         }
+    }
+
+    out
+}
+
+fn find_arc_segment_intersections(seg: &Segment, arc: &Arc, angles_out: &mut Vec<f64>) {
+    for int in find_arc_segment_intersection_common(seg, arc) {
+        angles_out.push(int.angle);
+    }
+}
+
+// Puts resulting S values along seg into s_out
+fn find_segment_arc_intersections(seg: &Segment, arc: &Arc, s_out: &mut Vec<f64>) {
+    for int in find_arc_segment_intersection_common(seg, arc) {
+        s_out.push(int.s);
     }
 }
 
@@ -189,6 +214,36 @@ fn find_arc_intersections(arc_a: &Arc, arc_b: &Arc, angles_out: &mut Vec<f64>) {
     }
 }
 
+// Returns the S value of the intersection along segment A
+fn find_segment_intersection(a: &Segment, b: &Segment) -> Option<f64> {
+    // From https://stackoverflow.com/a/18929324
+
+    let d1 = a.to - a.from;
+    let d2 = b.to - b.from;
+
+    let vp = d1.x * d2.y - d2.x * d1.y;
+    if vp.abs() < 0.001 {
+        // Ignore collision if the segments are collinear
+        // This is so a segment between two vertices of a polygon cannot
+        // collide with its own edge
+        return None;
+    }
+
+    let v = b.from - a.from;
+
+    let k1 = (v.x * d2.y - v.y * d2.x) / vp;
+    if 0.0 <= k1 && k1 <= 1.0 {
+        let k2 = (v.x * d1.y - v.y * d1.x) / vp;
+        if 0.0 <= k2 && k2 <= 1.0 {
+            Some(k1)
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
+
 fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
     let mut raw_angles = Vec::new();
     for segment in &poly.segments {
@@ -198,7 +253,6 @@ fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
         find_arc_intersections(&to_clip, arc, &mut raw_angles);
     }
 
-    println!("Raw angles: {raw_angles:?}");
     let mut intersect_angles = Vec::new();
     for angle in raw_angles {
         let mut angle = wrap_angle(angle);
@@ -224,10 +278,6 @@ fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
     if to_clip_max_angle <= to_clip.min_angle {
         to_clip_max_angle += PI * 2.0;
     }
-    println!(
-        "Min angle = {}, intersects are {:?}",
-        to_clip.min_angle, intersect_angles
-    );
 
     for i in 0..(intersect_angles.len() + 1) {
         let min_angle = if i == 0 {
@@ -259,6 +309,56 @@ fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
                 radius: to_clip.radius,
                 min_angle,
                 max_angle,
+            });
+        }
+    }
+}
+
+fn clip_segment(to_clip: Segment, poly: &EnvPolygon, out: &mut Vec<Segment>) {
+    let mut raw_s = Vec::new();
+    for segment in &poly.segments {
+        if let Some(s) = find_segment_intersection(&to_clip, segment) {
+            raw_s.push(s);
+        }
+    }
+    for arc in &poly.arcs {
+        find_segment_arc_intersections(&to_clip, arc, &mut raw_s);
+    }
+
+    let mut intersect_s = Vec::new();
+    for s in raw_s {
+        let mut add = true;
+        for existing in &intersect_s {
+            let diff: f64 = existing - s;
+            if diff.abs() < 0.01 {
+                add = false;
+                break;
+            }
+        }
+        if add {
+            intersect_s.push(s);
+        }
+    }
+    intersect_s.sort_by(|a, b| a.total_cmp(b));
+
+    for i in 0..(intersect_s.len() + 1) {
+        let min_s = if i == 0 { 0.0 } else { intersect_s[i - 1] };
+        let max_s = if i == intersect_s.len() {
+            1.0
+        } else {
+            intersect_s[i]
+        };
+        if min_s == max_s {
+            continue;
+        }
+
+        let halfway = (min_s + max_s) / 2.0;
+        let test_point = to_clip.from.lerp(to_clip.to, halfway);
+
+        if !poly.is_inside(test_point) {
+            out.push(Segment {
+                from: to_clip.from.lerp(to_clip.to, min_s),
+                to: to_clip.from.lerp(to_clip.to, max_s),
             });
         }
     }
@@ -420,21 +520,28 @@ impl Environment {
             let to_clip = &polygons[i1];
 
             let mut arcs = to_clip.arcs.clone();
+            let mut segments = to_clip.segments.clone();
             for i2 in 0..polygons.len() {
                 if i1 == i2 {
                     continue;
                 }
                 let against = &polygons[i2];
 
-                let mut clipped = Vec::new();
+                let mut clipped_arcs = Vec::new();
                 for arc in arcs {
-                    clip_arc(arc, &against, &mut clipped);
+                    clip_arc(arc, &against, &mut clipped_arcs);
                 }
-                arcs = clipped;
+                arcs = clipped_arcs;
+
+                let mut clipped_segs = Vec::new();
+                for seg in segments {
+                    clip_segment(seg, &against, &mut clipped_segs);
+                }
+                segments = clipped_segs;
             }
 
             all_arcs.append(&mut arcs);
-            all_segments.extend_from_slice(&to_clip.segments);
+            all_segments.append(&mut segments);
         }
 
         // let mut arcs = Vec::new();
@@ -906,30 +1013,33 @@ impl Environment {
         }
 
         for segment in &self.segments {
-            let d1 = segment.to - segment.from;
-            let d2 = seg.to - seg.from;
-
-            let vp = d1.x * d2.y - d2.x * d1.y;
-            if vp.abs() < 0.001 {
-                // Ignore collision if the segments are collinear
-                // This is so a segment between two vertices of a polygon cannot
-                // collide with its own edge
-                continue;
+            if let Some(_) = find_segment_intersection(segment, seg) {
+                return false;
             }
+            // let d1 = segment.to - segment.from;
+            // let d2 = seg.to - seg.from;
 
-            let v = seg.from - segment.from;
+            // let vp = d1.x * d2.y - d2.x * d1.y;
+            // if vp.abs() < 0.001 {
+            //     // Ignore collision if the segments are collinear
+            //     // This is so a segment between two vertices of a polygon cannot
+            //     // collide with its own edge
+            //     continue;
+            // }
 
-            let k1 = (v.x * d2.y - v.y * d2.x) / vp;
-            if k1 < 0.0 || k1 > 1.0 {
-                continue;
-            }
+            // let v = seg.from - segment.from;
 
-            let k2 = (v.x * d1.y - v.y * d1.x) / vp;
-            if k2 < 0.0 || k2 > 1.0 {
-                continue;
-            }
+            // let k1 = (v.x * d2.y - v.y * d2.x) / vp;
+            // if k1 < 0.0 || k1 > 1.0 {
+            //     continue;
+            // }
 
-            return false;
+            // let k2 = (v.x * d1.y - v.y * d1.x) / vp;
+            // if k2 < 0.0 || k2 > 1.0 {
+            //     continue;
+            // }
+
+            // return false;
         }
 
         return true;

@@ -128,6 +128,12 @@ public final class PathfindingDebug {
             }
         }
 
+        for (EnvPolygon poly : envPolygons) {
+            for (Triangle tri : poly.internalRegion) {
+                g.plotLines(List.of(tri.v1, tri.v2, tri.v3), Color.kBlue);
+            }
+        }
+
         for (Segment seg : segments) {
             g.plotLines(List.of(
                     new Translation2d(seg.x1, seg.y1),
@@ -142,12 +148,20 @@ public final class PathfindingDebug {
                     center.plus(perp)), Color.kRed);
         }
 
-        for (EnvPolygon poly : envPolygons) {
-            for (Triangle tri : poly.internalRegion) {
-                g.plotLines(List.of(tri.v1, tri.v2, tri.v3), Color.kBlue);
+        // Arc boundaries
+        for (Arc arc : arcs) {
+            List<Translation2d> points = new ArrayList<>();
+            for (int i = 0; i <= 20; i++) {
+                double angle = (i / 20.0) * MathUtil.TAU;
+
+                points.add(new Translation2d(
+                        arc.centerX + arc.radius * Math.cos(angle),
+                        arc.centerY + arc.radius * Math.sin(angle)));
             }
+            g.plotLines(points, Color.kDimGray);
         }
 
+        // Actual arcs
         for (Arc arc : arcs) {
             double max = arc.maxAngle;
             if (max <= arc.minAngle)

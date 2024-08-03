@@ -21,9 +21,16 @@ public final class DebugGraphics {
         rootIdx = 0;
     }
 
+    // Formats the number such that sorting alphabetically gives the right order
+    private String formatAlpha(int i) {
+        // This will work up until 10000 elements have been added, which hopefully won't
+        // happen
+        return String.format("%04d", i);
+    }
+
     public void plotLines(List<Translation2d> positions, Color color) {
         Translation2d first = positions.get(0);
-        MechanismRoot2d root = mechanism.getRoot("root" + rootIdx++, first.getX(), first.getY());
+        MechanismRoot2d root = mechanism.getRoot("root" + formatAlpha(rootIdx++), first.getX(), first.getY());
 
         Translation2d prev = first;
         MechanismLigament2d prevLigament = null;
@@ -36,7 +43,9 @@ public final class DebugGraphics {
             double angle = Math.toDegrees(Math.atan2(dy, dx));
             double length = Math.sqrt(dx * dx + dy * dy);
 
-            MechanismLigament2d ligament2d = new MechanismLigament2d("line" + i, length, angle - prevAngle, 2, new Color8Bit(color));
+            MechanismLigament2d ligament2d = new MechanismLigament2d("line" + i, length, angle - prevAngle,
+                    2,
+                    new Color8Bit(color));
             if (prevLigament == null)
                 root.append(ligament2d);
             else
