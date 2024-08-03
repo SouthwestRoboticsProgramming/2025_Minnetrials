@@ -3,10 +3,7 @@ package com.swrobotics.robot.subsystems;
 import com.pathplanner.lib.path.PathConstraints;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
-import com.swrobotics.robot.pathfinding.Obstacle;
-import com.swrobotics.robot.pathfinding.PathEnvironment;
-import com.swrobotics.robot.pathfinding.PathPlannerPathfinder;
-import com.swrobotics.robot.pathfinding.Rectangle;
+import com.swrobotics.robot.pathfinding.*;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -32,12 +29,20 @@ public final class PathfindingTest extends SubsystemBase {
             obstacles.add(new Rectangle(
                     new Translation2d(8, 4),
                     new Translation2d(6, 4),
-                    0
-            ));
+                    0));
             environment = new PathEnvironment(obstacles, Constants.kRobotRadius + Constants.kPathfindingTolerance);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        // environment = new PathEnvironment(
+        // List.of(
+        // new Circle(new Translation2d(4, 4), 1.5),
+        // // new Circle(new Translation2d(6, 4.1), 1.5)
+
+        // new Rectangle(new Translation2d(10, 4), new Translation2d(8, 0.1), 0)
+        // ),
+        // Constants.kRobotRadius + Constants.kPathfindingTolerance
+        // );
 
         environment.getDebug().plot();
 
@@ -51,8 +56,7 @@ public final class PathfindingTest extends SubsystemBase {
                 Constants.kMaxAchievableSpeed,
                 Constants.kMaxAchievableSpeed / 0.7,
                 Constants.kDriveControlMaxTurnSpeed,
-                Constants.kDriveControlMaxTurnSpeed / 0.2
-        ));
+                Constants.kDriveControlMaxTurnSpeed / 0.2));
     }
 
     @Override

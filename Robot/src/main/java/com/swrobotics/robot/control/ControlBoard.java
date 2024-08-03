@@ -61,7 +61,6 @@ public final class ControlBoard extends SubsystemBase {
         driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
 
         // Endgame Alert
-        /** Must restart robot code for the time change to take effect */
         new Trigger(
             () ->
                 DriverStation.isTeleopEnabled()

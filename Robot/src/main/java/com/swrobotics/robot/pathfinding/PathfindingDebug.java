@@ -15,20 +15,34 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class PathfindingDebug {
-    public static DebugGraphics g = new DebugGraphics("Pathfinding Debug", Constants.kField.getWidth(), Constants.kField.getHeight());
+    public static DebugGraphics g = new DebugGraphics("Pathfinding Debug", Constants.kField.getWidth(),
+            Constants.kField.getHeight());
 
+    private static final class Input {
+        private final double[] data;
+        private int index;
+
+        public Input(double[] data) {
+            this.data = data;
+            index = 0;
+        }
+
+        public double next() {
+            return data[index++];
+        }
+    }
 
     public static final class Arc {
         public final double centerX, centerY;
         public final double radius;
         public final double minAngle, maxAngle;
 
-        public Arc(double[] data, int i) {
-            centerX = data[i];
-            centerY = data[i + 1];
-            radius = data[i + 2];
-            minAngle = data[i + 3];
-            maxAngle = data[i + 4];
+        public Arc(Input in) {
+            centerX = in.next();
+            centerY = in.next();
+            radius = in.next();
+            minAngle = in.next();
+            maxAngle = in.next();
         }
     }
 
@@ -36,30 +50,58 @@ public final class PathfindingDebug {
         public final double x1, y1;
         public final double x2, y2;
 
-        public Segment(double[] data, int i) {
-            x1 = data[i];
-            y1 = data[i + 1];
-            x2 = data[i + 2];
-            y2 = data[i + 3];
+        public Segment(Input in) {
+            x1 = in.next();
+            y1 = in.next();
+            x2 = in.next();
+            y2 = in.next();
+        }
+    }
+
+    public static final class Triangle {
+        public final Translation2d v1, v2, v3;
+
+        public Triangle(Input in) {
+            v1 = new Translation2d(in.next(), in.next());
+            v2 = new Translation2d(in.next(), in.next());
+            v3 = new Translation2d(in.next(), in.next());
+        }
+    }
+
+    public static final class EnvPolygon {
+        public Triangle[] internalRegion;
+
+        public EnvPolygon(Input in) {
+            internalRegion = new Triangle[(int) in.next()];
+            for (int i = 0; i < internalRegion.length; i++) {
+                internalRegion[i] = new Triangle(in);
+            }
         }
     }
 
     public final List<Obstacle> obstacles;
     public final Arc[] arcs;
     public final Segment[] segments;
+    public final EnvPolygon[] envPolygons;
 
     public PathfindingDebug(List<Obstacle> obstacles, double[] data) {
         this.obstacles = obstacles;
 
-        arcs = new Arc[(int) data[0]];
+        Input in = new Input(data);
+
+        arcs = new Arc[(int) in.next()];
         for (int i = 0; i < arcs.length; i++) {
-            arcs[i] = new Arc(data, i * 5 + 1);
+            arcs[i] = new Arc(in);
         }
 
-        int base = arcs.length * 5 + 1;
-        segments = new Segment[(int) data[base]];
+        segments = new Segment[(int) in.next()];
         for (int i = 0; i < segments.length; i++) {
-            segments[i] = new Segment(data, base + i * 4 + 1);
+            segments[i] = new Segment(in);
+        }
+
+        envPolygons = new EnvPolygon[(int) in.next()];
+        for (int i = 0; i < envPolygons.length; i++) {
+            envPolygons[i] = new EnvPolygon(in);
         }
     }
 
@@ -72,8 +114,7 @@ public final class PathfindingDebug {
 
                     points.add(new Translation2d(
                             circle.getCenter().getX() + circle.getRadius() * Math.cos(angle),
-                            circle.getCenter().getY() + circle.getRadius() * Math.sin(angle)
-                    ));
+                            circle.getCenter().getY() + circle.getRadius() * Math.sin(angle)));
                 }
                 g.plotLines(points, Color.kOrange);
             } else if (obs instanceof Polygon poly) {
@@ -90,8 +131,7 @@ public final class PathfindingDebug {
         for (Segment seg : segments) {
             g.plotLines(List.of(
                     new Translation2d(seg.x1, seg.y1),
-                    new Translation2d(seg.x2, seg.y2)
-            ), Color.kYellow);
+                    new Translation2d(seg.x2, seg.y2)), Color.kYellow);
 
             Translation2d center = new Translation2d((seg.x1 + seg.x2) / 2, (seg.y1 + seg.y2) / 2);
             Translation2d perp = new Translation2d(seg.y1 - seg.y2, seg.x2 - seg.x1);
@@ -99,8 +139,13 @@ public final class PathfindingDebug {
 
             g.plotLines(List.of(
                     center,
-                    center.plus(perp)
-            ), Color.kRed);
+                    center.plus(perp)), Color.kRed);
+        }
+
+        for (EnvPolygon poly : envPolygons) {
+            for (Triangle tri : poly.internalRegion) {
+                g.plotLines(List.of(tri.v1, tri.v2, tri.v3), Color.kBlue);
+            }
         }
 
         for (Arc arc : arcs) {
@@ -109,14 +154,13 @@ public final class PathfindingDebug {
                 max += Math.PI * 2;
 
             List<Translation2d> points = new ArrayList<>();
-            for (int i = 0; i <= 5; i++) {
-                double f = i / 5.0;
+            for (int i = 0; i <= 20; i++) {
+                double f = i / 20.0;
                 double angle = MathUtil.lerp(arc.minAngle, max, f);
 
                 points.add(new Translation2d(
                         arc.centerX + arc.radius * Math.cos(angle),
-                        arc.centerY + arc.radius * Math.sin(angle)
-                ));
+                        arc.centerY + arc.radius * Math.sin(angle)));
             }
             g.plotLines(points, Color.kYellow);
         }

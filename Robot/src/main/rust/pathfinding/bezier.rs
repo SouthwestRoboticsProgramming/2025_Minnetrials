@@ -32,27 +32,77 @@ pub fn to_bezier(path: &Vec<PathArc>, start: Vec2f, goal: Vec2f) -> Vec<Vec2f> {
         let in_pt = arc.center + Vec2f::new_angle(arc.radius, angle1);
         let out_pt = arc.center + Vec2f::new_angle(arc.radius, angle2);
 
-        let l = 4.0 / 3.0 * (diff / 4.0).tan() * arc.radius;
-
-        // FIXME: Split the arc if it's over 180 degrees, since the approximation becomes significantly worse there
-        //  Not fixing this year, field has no geometry that can cause this problem
-
+        // Segment from last point to this arc
         bezier_pts.push(last_pt);
         bezier_pts.push(last_pt.lerp(in_pt, 1.0 / 3.0));
         bezier_pts.push(last_pt.lerp(in_pt, 2.0 / 3.0));
-        bezier_pts.push(in_pt);
-        bezier_pts.push(in_pt + (in_pt - last_pt).norm() * l);
-        bezier_pts.push(
-            out_pt
-                + Vec2f::new_angle(
-                    l,
-                    angle2
-                        + match arc.direction {
-                            WindingDir::Clockwise => PI / 2.0,
-                            WindingDir::Counterclockwise => -PI / 2.0,
-                        },
-                ),
-        );
+
+        if diff > PI {
+            // Need to split the arc since the approximation becomes significantly worse there
+
+            let between_angle = match arc.direction {
+                WindingDir::Counterclockwise => angle1 + diff / 2.0,
+                WindingDir::Clockwise => angle2 + diff / 2.0,
+            };
+            let between_pt = arc.center + Vec2f::new_angle(arc.radius, between_angle);
+
+            let l = 4.0 / 3.0 * (diff / 8.0).tan() * arc.radius;
+            bezier_pts.push(in_pt);
+            bezier_pts.push(in_pt + (in_pt - last_pt).norm() * l);
+            bezier_pts.push(
+                between_pt
+                    + Vec2f::new_angle(
+                        l,
+                        angle2
+                            + match arc.direction {
+                                WindingDir::Clockwise => PI / 2.0,
+                                WindingDir::Counterclockwise => -PI / 2.0,
+                            },
+                    ),
+            );
+            bezier_pts.push(between_pt);
+            bezier_pts.push(
+                between_pt
+                    + Vec2f::new_angle(
+                        l,
+                        angle2
+                            + match arc.direction {
+                                WindingDir::Clockwise => -PI / 2.0,
+                                WindingDir::Counterclockwise => PI / 2.0,
+                            },
+                    ),
+            );
+            bezier_pts.push(
+                out_pt
+                    + Vec2f::new_angle(
+                        l,
+                        angle2
+                            + match arc.direction {
+                                WindingDir::Clockwise => PI / 2.0,
+                                WindingDir::Counterclockwise => -PI / 2.0,
+                            },
+                    ),
+            );
+        } else {
+            let l = 4.0 / 3.0 * (diff / 4.0).tan() * arc.radius;
+
+            // FIXME: Split the arc if it's over 180 degrees, since the approximation becomes significantly worse there
+            //  Not fixing this year, field has no geometry that can cause this problem
+
+            bezier_pts.push(in_pt);
+            bezier_pts.push(in_pt + (in_pt - last_pt).norm() * l);
+            bezier_pts.push(
+                out_pt
+                    + Vec2f::new_angle(
+                        l,
+                        angle2
+                            + match arc.direction {
+                                WindingDir::Clockwise => PI / 2.0,
+                                WindingDir::Counterclockwise => -PI / 2.0,
+                            },
+                    ),
+            );
+        }
 
         last_pt = out_pt;
     }
