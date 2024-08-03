@@ -51,7 +51,7 @@ impl Arc {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Segment {
     pub from: Vec2f,
     pub to: Vec2f,
@@ -366,7 +366,7 @@ fn clip_segment(to_clip: Segment, poly: &EnvPolygon, out: &mut Vec<Segment>) {
 
 // -------------------------
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum WindingDir {
     Clockwise,
     Counterclockwise,
@@ -381,6 +381,7 @@ impl WindingDir {
     }
 }
 
+#[derive(Debug)]
 pub struct PointToArcTangent {
     pub segment: Segment,
     pub arc_angle: f64,
@@ -588,6 +589,7 @@ impl Environment {
     }
 
     pub fn debug_find_safe(&self, mut start: Vec2f) -> Vec<Vec2f> {
+        println!("DOING THE THING!!!");
         const MAX_ATTEMPTS: usize = 8;
 
         let mut points = Vec::new();
@@ -599,12 +601,14 @@ impl Environment {
             let mut is_safe = false;
             for (arc_id, arc) in self.arcs.iter().enumerate() {
                 self.find_point_to_arc_tangents(start, &arc, arc_id, &mut tangents);
+                println!("Found tangents: {tangents:?}");
                 if !tangents.is_empty() {
                     is_safe = true;
                     break;
                 }
             }
             if is_safe {
+                println!("it's safe :)");
                 break;
             }
 
@@ -628,7 +632,7 @@ impl Environment {
                 } else {
                     let t =
                         ((start.x - p1.x) * (p2.x - p1.x) + (start.y - p1.y) * (p2.y - p1.y)) / l2;
-                    let t = t.clamp(0.0, 1.0);
+                    let t = t.clamp(0.1, 0.9);
                     p1.lerp(p2, t)
                 };
                 let dist = start.distance_sq(proj_point);
@@ -638,6 +642,24 @@ impl Environment {
                     None => true,
                 } {
                     nearest = Some((dist, proj_point));
+                }
+            }
+            for arc in &self.arcs {
+                // If the point is inside the sector spanned by the arc, project to be along the arc
+                let rel = start - arc.center;
+                if rel.length_sq() < arc.radius * arc.radius {
+                    let angle = angle_to_arc(arc, start);
+                    if arc.contains_angle(angle) {
+                        let proj_point = arc.center + (rel.norm() * arc.radius);
+                        let dist = start.distance_sq(proj_point);
+
+                        if match nearest {
+                            Some((d, _)) => dist < d,
+                            None => true,
+                        } {
+                            nearest = Some((dist, proj_point));
+                        }
+                    }
                 }
             }
 
@@ -720,12 +742,13 @@ impl Environment {
                 let p2 = segment.to;
                 let l2 = p2.distance_sq(p1);
 
+                // Project the current position onto the segment
                 let proj_point = if l2 == 0.0 {
                     p1
                 } else {
                     let t =
                         ((start.x - p1.x) * (p2.x - p1.x) + (start.y - p1.y) * (p2.y - p1.y)) / l2;
-                    let t = t.clamp(0.0, 1.0);
+                    let t = t.clamp(0.1, 0.9); // Not 0 to 1 to prevent getting trapped in acute concave corners
                     p1.lerp(p2, t)
                 };
                 let dist = start.distance_sq(proj_point);
@@ -735,6 +758,24 @@ impl Environment {
                     None => true,
                 } {
                     nearest = Some((dist, proj_point));
+                }
+            }
+            for arc in &self.arcs {
+                // If the point is inside the sector spanned by the arc, project to be along the arc
+                let rel = start - arc.center;
+                if rel.length_sq() < arc.radius * arc.radius {
+                    let angle = angle_to_arc(arc, start);
+                    if arc.contains_angle(angle) {
+                        let proj_point = arc.center + (rel.norm() * arc.radius);
+                        let dist = start.distance_sq(proj_point);
+
+                        if match nearest {
+                            Some((d, _)) => dist < d,
+                            None => true,
+                        } {
+                            nearest = Some((dist, proj_point));
+                        }
+                    }
                 }
             }
 
@@ -859,6 +900,10 @@ impl Environment {
 
         let d = point - arc.center;
         let distance = d.length();
+        if distance < arc.radius {
+            // Point is inside the arc, no tangents
+            return;
+        }
 
         let angle_offset = (arc.radius / distance).acos();
         let base_angle = d.angle();
