@@ -11,6 +11,7 @@ import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
 import com.swrobotics.robot.commands.LightCommands;
 import com.swrobotics.robot.commands.RumblePatternCommands;
 import com.swrobotics.robot.config.Constants;
+import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.pathfinding.PathfindingDebug;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
@@ -81,7 +82,7 @@ public final class ControlBoard extends SubsystemBase {
             for (int i = 1; i < points.size(); i++) {
                 Translation2d a = points.get(i - 1);
                 Translation2d b = points.get(i);
-                PathfindingDebug.g.plotLines(List.of(a, b), Color.kAliceBlue);
+                FieldView.pathfindingDebug.plotLines(List.of(a, b), Color.kAliceBlue);
             }
         });
     }

@@ -7,8 +7,8 @@ import java.nio.file.Paths;
 
 public final class PathfindingJNI {
     // Use debug for testing, release for performance
-    private static final String PROFILE = "debug";
-//    private static final String PROFILE = "release";
+//    private static final String PROFILE = "debug";
+    private static final String PROFILE = "release";
 
     private static final String LIBRARY_NAME = "pathfinding_jni";
 

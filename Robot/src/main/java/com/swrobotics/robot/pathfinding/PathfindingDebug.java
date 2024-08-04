@@ -1,12 +1,7 @@
 package com.swrobotics.robot.pathfinding;
 
-import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.utils.MathUtil;
-import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.DebugGraphics;
-import com.swrobotics.robot.logging.FieldView;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.util.Color;
 
@@ -15,9 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class PathfindingDebug {
-    public static DebugGraphics g = new DebugGraphics("Pathfinding Debug", Constants.kField.getWidth(),
-            Constants.kField.getHeight());
-
     private static final class Input {
         private final double[] data;
         private int index;
@@ -105,7 +97,7 @@ public final class PathfindingDebug {
         }
     }
 
-    public void plot() {
+    public void plot(DebugGraphics g) {
         for (Obstacle obs : obstacles) {
             if (obs instanceof Circle circle) {
                 List<Translation2d> points = new ArrayList<>();

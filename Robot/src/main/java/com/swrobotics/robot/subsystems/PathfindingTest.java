@@ -26,25 +26,17 @@ public final class PathfindingTest extends SubsystemBase {
         try {
             List<Obstacle> obstacles = Obstacle.loadFromJson("crescendo_pathfinding.json");
             // Test overlapping obstacles
-            obstacles.add(new Rectangle(
-                    new Translation2d(8, 4),
-                    new Translation2d(6, 4),
-                    0));
+//            obstacles.add(new Rectangle(
+//                    new Translation2d(8, 4),
+//                    new Translation2d(6, 4),
+//                    0));
             environment = new PathEnvironment(obstacles, Constants.kRobotRadius +
                     Constants.kPathfindingTolerance);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        // environment = new PathEnvironment(
-        // List.of(
-        // new Circle(new Translation2d(4, 4), 1.5)
-        // // new Circle(new Translation2d(6, 4.1), 1.5)
 
-        // // new Rectangle(new Translation2d(10, 4), new Translation2d(8, 0.1), 0)
-        // ),
-        // Constants.kRobotRadius + Constants.kPathfindingTolerance);
-
-        environment.getDebug().plot();
+        environment.getDebug().plot(FieldView.pathfindingDebug);
 
         FieldView.pathfindingGoal.setPose(new Pose2d(new Translation2d(2, 2), new Rotation2d()));
     }
