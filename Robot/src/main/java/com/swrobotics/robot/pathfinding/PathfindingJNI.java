@@ -31,6 +31,7 @@ public final class PathfindingJNI {
     }
 
     // These functions are implemented in src/main/rust/lib.rs
+    // Do not use these unless you know what you're doing!
 
     public static native long newObstacleList(); // Returns obstacle list handle
     public static native void addCircle(long obsHandle, double posX, double posY, double radius);

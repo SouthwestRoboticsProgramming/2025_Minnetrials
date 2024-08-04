@@ -307,8 +307,8 @@ fn clip_arc(to_clip: Arc, poly: &EnvPolygon, out: &mut Vec<Arc>) {
             out.push(Arc {
                 center: to_clip.center,
                 radius: to_clip.radius,
-                min_angle,
-                max_angle,
+                min_angle: math::wrap_angle(min_angle),
+                max_angle: math::wrap_angle(max_angle),
             });
         }
     }
