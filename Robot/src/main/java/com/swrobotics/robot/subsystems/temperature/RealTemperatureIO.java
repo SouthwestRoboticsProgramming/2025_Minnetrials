@@ -51,12 +51,12 @@ public final class RealTemperatureIO implements TemperatureIO {
     }
 
     @Override
-    public void addMotor(String name, String canBus, TalonFX motor) {
+    public void addMotor(String name, TalonFX motor) {
         if (allSignals != null)
             throw new IllegalStateException("Can only add motors in robotInit()");
 
         StatusSignal<Double> tempStatus = motor.getDeviceTemp();
         tempStatus.setUpdateFrequency(4); // 4 Hz is minimum update frequency supported
-        motors.add(new TrackedMotor(name, canBus, tempStatus));
+        motors.add(new TrackedMotor(name, motor.getNetwork(), tempStatus));
     }
 }

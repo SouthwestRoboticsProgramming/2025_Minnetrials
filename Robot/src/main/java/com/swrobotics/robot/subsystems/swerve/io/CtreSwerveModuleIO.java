@@ -33,8 +33,8 @@ public final class CtreSwerveModuleIO extends SwerveModuleIO {
 
         MusicSubsystem.getInstance().addInstrument(module.getDriveMotor());
         MusicSubsystem.getInstance().addInstrument(module.getSteerMotor());
-        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Drive", canBus, module.getDriveMotor());
-        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Steer", canBus, module.getSteerMotor());
+        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Drive", module.getDriveMotor());
+        TemperatureTrackerSubsystem.getInstance().addMotor(name + " Steer", module.getSteerMotor());
 
         BaseStatusSignal.setUpdateFrequencyForAll(
                 Constants.kPeriodicFreq,
