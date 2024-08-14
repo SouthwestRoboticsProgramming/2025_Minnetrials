@@ -1,15 +1,13 @@
 package com.swrobotics.robot.pathfinding;
 
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class PathfindingJNI {
-    // Use debug for testing, release for performance
-//    private static final String PROFILE = "debug";
-    private static final String PROFILE = "release";
-
     private static final String LIBRARY_NAME = "pathfinding_jni";
 
     static {
@@ -22,9 +20,8 @@ public final class PathfindingJNI {
         } catch (UnsatisfiedLinkError e) {
             if (type == RuntimeType.SIMULATION_WINDOWS || type == RuntimeType.SIMULATION_LINUX) {
                 // Give a little reminder
-                System.err.println("Failed to load Pathfinding JNI library. Make sure the library is built using '"
-                    + (PROFILE.equals("release") ? "cargo build --release" : "cargo build")
-                    + "'.");
+                System.err.println("Failed to load Pathfinding JNI library. Make sure the library is built using "
+                    + "'cargo build --release'.");
             }
             throw e;
         }
@@ -51,21 +48,19 @@ public final class PathfindingJNI {
         ROBORIO {
             @Override
             Path getLibraryPath() {
-                // FIXME: Don't do this
-                //  Still need to figure out how to compile Rust for RoboRIO
-                throw new RuntimeException("TODO");
+                return new File(Filesystem.getDeployDirectory(), "lib" + LIBRARY_NAME + ".so").toPath();
             }
         },
         SIMULATION_WINDOWS {
             @Override
             Path getLibraryPath() {
-                return Paths.get("target\\" + PROFILE + "\\" + LIBRARY_NAME + ".dll");
+                return Paths.get("target\\release\\" + LIBRARY_NAME + ".dll");
             }
         },
         SIMULATION_LINUX {
             @Override
             Path getLibraryPath() {
-                return Paths.get("target/" + PROFILE + "/lib" + LIBRARY_NAME + ".so");
+                return Paths.get("target/release/lib" + LIBRARY_NAME + ".so");
             }
         };
 
