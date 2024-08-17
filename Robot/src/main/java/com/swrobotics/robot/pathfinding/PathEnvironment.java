@@ -4,6 +4,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public final class PathEnvironment {
     private final List<Obstacle> obstacles;
@@ -45,5 +46,18 @@ public final class PathEnvironment {
             points.add(new Translation2d(x, y));
         }
         return points;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PathEnvironment that = (PathEnvironment) o;
+        return handle == that.handle;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(handle);
     }
 }

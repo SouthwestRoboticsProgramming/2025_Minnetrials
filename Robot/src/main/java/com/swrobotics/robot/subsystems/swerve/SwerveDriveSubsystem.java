@@ -5,6 +5,7 @@ import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 
+import com.swrobotics.robot.pathfinding.AsyncPathPlannerPathfinder;
 import com.swrobotics.robot.pathfinding.PathPlannerPathfinder;
 import com.swrobotics.robot.subsystems.swerve.io.*;
 import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
@@ -142,7 +143,8 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
         PathPlannerLogging.setLogActivePathCallback(FieldView.pathPlannerPath::setPoses);
         PathPlannerLogging.setLogTargetPoseCallback(FieldView.pathPlannerSetpoint::setPose);
 
-        Pathfinding.setPathfinder(PathPlannerPathfinder.getInstance());
+//        Pathfinding.setPathfinder(PathPlannerPathfinder.getInstance());
+        Pathfinding.setPathfinder(AsyncPathPlannerPathfinder.getInstance());
     }
 
     public SwerveModuleState[] getCurrentModuleStates() {

@@ -54,19 +54,19 @@ public final class PathPlannerPathfinder implements Pathfinder {
     }
 
     public void setEnvironment(PathEnvironment environment) {
-        paramsChanged |= this.environment != environment;
+        paramsChanged = true;
         this.environment = environment;
     }
 
     @Override
     public void setStartPosition(Translation2d startPos) {
-        paramsChanged |= !startPos.equals(this.startPos);
+        paramsChanged = true;
         this.startPos = startPos;
     }
 
     @Override
     public void setGoalPosition(Translation2d goalPos) {
-        paramsChanged |= !goalPos.equals(this.goalPos);
+        paramsChanged = true;
         this.goalPos = goalPos;
     }
 
