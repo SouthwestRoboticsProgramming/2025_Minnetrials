@@ -134,32 +134,6 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_getD
     into_java_array(&mut env, data).unwrap()
 }
 
-// TODO: Remove this
-#[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_debugFindSafe<
-    'local,
->(
-    mut env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    env_handle: jlong,
-    start_x: jdouble,
-    start_y: jdouble,
-) -> jdoubleArray {
-    let environment = unsafe { &mut *(env_handle as *mut pathfinding::Environment) };
-    let points = environment.debug_find_safe(Vec2f {
-        x: start_x,
-        y: start_y,
-    });
-
-    let mut data = Vec::new();
-    for point in points {
-        data.push(point.x);
-        data.push(point.y);
-    }
-
-    into_java_array(&mut env, data).unwrap()
-}
-
 fn into_java_array(env: &mut JNIEnv, values: Vec<f64>) -> Result<jdoubleArray, jni::errors::Error> {
     let results = env.new_double_array(values.len() as i32)?;
     env.set_double_array_region(&results, 0, &values)?;
