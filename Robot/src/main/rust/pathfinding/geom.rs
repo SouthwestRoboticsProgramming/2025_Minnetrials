@@ -499,6 +499,11 @@ fn calc_turn_cost(incoming_angle: f64, outgoing_angle: f64, radius: f64, dir: Wi
     diff * radius
 }
 
+pub struct PathResult {
+    pub moved_start: Option<Vec2f>,
+    pub path: Vec<PathArc>,
+}
+
 impl Environment {
     pub fn generate(obstacles: &Vec<Obstacle>, inflate: f64) -> Self {
         let polygons = obstacles
@@ -588,7 +593,7 @@ impl Environment {
         data
     }
 
-    pub fn find_path(&self, mut start: Vec2f, goal: Vec2f) -> Option<Vec<PathArc>> {
+    pub fn find_path(&self, mut start: Vec2f, goal: Vec2f) -> Option<PathResult> {
         if self.is_segment_passable(
             &Segment {
                 from: start,
@@ -598,7 +603,10 @@ impl Environment {
             None,
         ) {
             // Straight line from start to goal
-            return Some(Vec::new());
+            return Some(PathResult {
+                moved_start: None,
+                path: Vec::new(),
+            });
         }
 
         // Check if the goal is unreachable, since if we try to search for unreachable
@@ -717,7 +725,10 @@ impl Environment {
                 None,
             ) {
                 // Straight line from start to goal
-                return Some(Vec::new());
+                return Some(PathResult {
+                    moved_start: Some(start),
+                    path: Vec::new(),
+                });
             }
         }
 
@@ -745,7 +756,10 @@ impl Environment {
 
                 out.reverse();
 
-                return Some(out);
+                return Some(PathResult {
+                    moved_start: if start_changed { Some(start) } else { None },
+                    path: out,
+                });
             }
 
             let current_arc_id = current.context.arc_id();

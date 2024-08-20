@@ -101,7 +101,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_find
 
     let path = environment
         .find_path(start, goal)
-        .map(|arcs| pathfinding::to_bezier(&arcs, start, goal));
+        .map(|result| pathfinding::to_bezier(&result, start, goal));
 
     match path {
         Some(path) => {

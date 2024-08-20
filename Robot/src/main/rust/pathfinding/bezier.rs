@@ -3,21 +3,27 @@ use std::f64::consts::PI;
 use lerp::Lerp;
 
 use super::{
-    geom::{PathArc, WindingDir},
+    geom::{PathResult, WindingDir},
     math::{self, Vec2f},
 };
 
-pub fn to_bezier(path: &Vec<PathArc>, start: Vec2f, goal: Vec2f) -> Vec<Vec2f> {
-    // if path.is_empty() {
-    //     let cp1 = start.lerp(goal, 1.0 / 3.0);
-    //     let cp2 = start.lerp(goal, 2.0 / 3.0);
-
-    //     return vec![start, cp1, cp2, goal];
-    // }
+pub fn to_bezier(result: &PathResult, start: Vec2f, goal: Vec2f) -> Vec<Vec2f> {
+    let PathResult { path, moved_start } = result;
 
     let mut bezier_pts = Vec::new();
-
     let mut last_pt = start;
+
+    if let Some(moved_start) = moved_start {
+        let moved_start = *moved_start;
+
+        // Segment from original start to moved start
+        bezier_pts.push(start);
+        bezier_pts.push(start.lerp(moved_start, 1.0 / 3.0));
+        bezier_pts.push(start.lerp(moved_start, 2.0 / 3.0));
+
+        last_pt = moved_start;
+    }
+
     for arc in path {
         let angle1 = math::wrap_angle(arc.incoming_angle);
         let angle2 = math::wrap_angle(arc.outgoing_angle);

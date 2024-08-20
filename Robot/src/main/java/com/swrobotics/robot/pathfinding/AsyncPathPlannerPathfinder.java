@@ -16,6 +16,7 @@ import org.littletonrobotics.junction.Logger;
 import java.util.List;
 import java.util.Objects;
 
+// FIXME: This is currently not replayable, needs AdvantageKit IO added
 public final class AsyncPathPlannerPathfinder implements Pathfinder {
     public static Command pathfindToPose(PathEnvironment env, Pose2d goal, PathConstraints constraints) {
         Command ppCommand = AutoBuilder.pathfindToPose(goal, constraints);
