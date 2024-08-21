@@ -982,6 +982,15 @@ impl Environment {
             if dist < arc.radius * arc.radius - 0.001 {
                 return false;
             }
+
+            // Due to allowing nearly tangent segments, cases where an endpoint
+            // is slightly inside an arc are missed, so we need to check those
+            if arc.center.distance_sq(seg.from) < arc.radius * arc.radius {
+                return false;
+            }
+            if arc.center.distance_sq(seg.to) < arc.radius * arc.radius {
+                return false;
+            }
         }
 
         for segment in &self.segments {

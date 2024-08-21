@@ -59,6 +59,7 @@ public final class PathfindingTest extends SubsystemBase {
 
         double startTime = Logger.getRealTimestamp();
         List<Translation2d> path = environment.findPath(drive.getEstimatedPose().getTranslation(), goalPos);
+
         double endTime = Logger.getRealTimestamp(); // Gives time in microseconds
         Logger.recordOutput("Pathfinding/Calc time (ms)", (endTime - startTime) / 1000);
 
@@ -89,9 +90,13 @@ public final class PathfindingTest extends SubsystemBase {
                 p0 = p3;
             }
             FieldView.pathfindingPath.setPoses(poses);
+
+            Logger.recordOutput("Pathfinding/Live Path", poses.toArray(new Pose2d[0]));
         } else {
             // No poses
             FieldView.pathfindingPath.setPoses();
+
+            Logger.recordOutput("Pathfinding/Live Path", new Pose2d[0]);
         }
     }
 }

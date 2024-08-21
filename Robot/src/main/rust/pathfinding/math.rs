@@ -1,5 +1,6 @@
 use std::{
     f64::consts::PI,
+    fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
 
@@ -120,5 +121,11 @@ impl Div<f64> for Vec2f {
             x: self.x / rhs,
             y: self.y / rhs,
         }
+    }
+}
+
+impl Display for Vec2f {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({}, {})", self.x, self.y)
     }
 }
