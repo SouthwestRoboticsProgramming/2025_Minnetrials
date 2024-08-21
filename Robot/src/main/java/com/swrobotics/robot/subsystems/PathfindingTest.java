@@ -1,14 +1,17 @@
 package com.swrobotics.robot.subsystems;
 
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.pathfinding.*;
+import com.swrobotics.robot.pathfinding.async.AsyncLoggedPathPlannerPathfinder;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -44,12 +47,17 @@ public final class PathfindingTest extends SubsystemBase {
     public Command getFollowCommand() {
         System.out.println("Pathfinding...");
         Pose2d goal = FieldView.pathfindingGoal.getPose();
-        return AsyncPathPlannerPathfinder.pathfindToPose(
-                environment, goal, new PathConstraints(
-                Constants.kMaxAchievableSpeed,
-                Constants.kMaxAchievableSpeed / 0.7,
-                Constants.kDriveControlMaxTurnSpeed,
-                Constants.kDriveControlMaxTurnSpeed / 0.2));
+
+        PathConstraints constraints = new PathConstraints(
+                    Constants.kMaxAchievableSpeed,
+                    Constants.kMaxAchievableSpeed / 0.7,
+                    Constants.kDriveControlMaxTurnSpeed,
+                    Constants.kDriveControlMaxTurnSpeed / 0.2);
+
+        return Commands.sequence(
+            Commands.runOnce(() -> AsyncLoggedPathPlannerPathfinder.setEnvironment(environment)),
+            AutoBuilder.pathfindToPose(goal, constraints)
+        );
     }
 
     @Override
