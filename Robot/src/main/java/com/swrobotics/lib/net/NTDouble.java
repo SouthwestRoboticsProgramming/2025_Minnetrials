@@ -1,6 +1,10 @@
 package com.swrobotics.lib.net;
 
-/** Represents a {@code double} value stored in NetworkTables. */
+/**
+ * Represents a {@code double} value stored in NetworkTables.
+ * @deprecated Not replayable in AdvantageKit
+ */
+@Deprecated
 public final class NTDouble extends NTPrimitive<Double> {
     private final double defaultVal;
 

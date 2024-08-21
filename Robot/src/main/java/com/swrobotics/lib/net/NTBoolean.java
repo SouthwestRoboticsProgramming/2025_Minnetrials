@@ -1,6 +1,10 @@
 package com.swrobotics.lib.net;
 
-/** Represents a {@code boolean} value stored in NetworkTables. */
+/**
+ * Represents a {@code boolean} value stored in NetworkTables.
+ * @deprecated Not replayable with AdvantageKit
+ */
+@Deprecated
 public final class NTBoolean extends NTPrimitive<Boolean> {
     private final boolean defaultVal;
 

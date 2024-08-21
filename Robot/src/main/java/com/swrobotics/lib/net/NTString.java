@@ -1,6 +1,10 @@
 package com.swrobotics.lib.net;
 
-/** Represents a {@code String} value stored in NetworkTables. */
+/**
+ * Represents a {@code String} value stored in NetworkTables. 
+ * @deprecated Not replayable with AdvantageKit
+ */
+@Deprecated
 public final class NTString extends NTPrimitive<String> {
     private final String defaultVal;
 

@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * @deprecated Not replayable with AdvantageKit
+ */
+@Deprecated
 public abstract class NTEntry<T> implements Supplier<T> {
     private final ArrayList<Consumer<T>> changeListeners;
     private boolean hasSetChangeListener;
