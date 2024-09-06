@@ -18,8 +18,6 @@ import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
-import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
-import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -39,8 +37,11 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Double> autoDelaySelector;
 
     public final LoggedPowerDistribution pdp;
+<<<<<<< Updated upstream
     public final TemperatureTrackerSubsystem temperatureTracker;
     public final SwerveDriveSubsystem drive;
+=======
+>>>>>>> Stashed changes
 
     public final LightsSubsystem lights;
     public final MusicSubsystem music;

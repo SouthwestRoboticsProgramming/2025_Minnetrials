@@ -4,7 +4,6 @@ import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.config.IOAllocation;
-import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.util.Color;
@@ -64,21 +63,16 @@ public final class LightsSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         boolean overCurrent = robot.pdp.getInputs().pdpTotalCurrent > Constants.kLedCurrentShutoffThreshold;
-        boolean overheating = robot.temperatureTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
         if (overCurrent) {
             applySolid(Color.kBlack); // Black means LEDs off
-        } else if (overheating) {
-            showOverheating();
         } else if (batteryLowDebounce.calculate(batteryLow)) {
             showLowBattery();
         } else if (commandRequest != null) {
             applySolid(commandRequest);
         } else if (DriverStation.isDisabled()) {
             prideSequencer.apply(this);
-        } else if (robot.drive.getLastSelectedPriority() == SwerveDriveSubsystem.Priority.AUTO) {
-            showAutoDriving();
         } else {
             showIdle();
         }

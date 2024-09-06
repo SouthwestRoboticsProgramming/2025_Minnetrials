@@ -1,60 +1,40 @@
 package com.swrobotics.robot.control;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
-import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.input.XboxController;
+<<<<<<< Updated upstream
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.lib.net.NTInteger;
 import com.swrobotics.lib.utils.MathUtil;
+=======
+>>>>>>> Stashed changes
 import com.swrobotics.robot.RobotContainer;
-import com.swrobotics.robot.commands.CharacterizeWheelsCommand;
-import com.swrobotics.robot.commands.LightCommands;
 import com.swrobotics.robot.commands.RumblePatternCommands;
 import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+<<<<<<< Updated upstream
 import edu.wpi.first.wpilibj.util.Color;
+=======
+>>>>>>> Stashed changes
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public final class ControlBoard extends SubsystemBase {
     /**
-     * Driver:
+     * Controls:
      * Left stick: translation
      * Right stick X: rotation
-     *
-     * Operator:
-     *
      */
 
-    private static final NTEntry<Boolean> CHARACTERISE_WHEEL_RADIUS = new NTBoolean("Drive/Characterize Wheel Radius", false);
-
     private final RobotContainer robot;
-    public final XboxController driver;
-    public final XboxController operator;
-
-    private final DriveAccelFilter driveFilter;
+    public final XboxController controller;
 
     public ControlBoard(RobotContainer robot) {
         this.robot = robot;
 
         // Passing deadband here means we don't have to deadband anywhere else
-        driver = new XboxController(Constants.kDriverControllerPort, Constants.kDeadband);
-        operator = new XboxController(Constants.kOperatorControllerPort, Constants.kDeadband);
-
-        // Gyro reset buttons
-        driver.start.onFalling(() -> robot.drive.setRotation(new Rotation2d()));
-        driver.back.onFalling(() -> robot.drive.setRotation(new Rotation2d())); // Two buttons to reset gyro so the driver can't get confused
-
-        // Test LEDs
-        driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
-
-        driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
+        controller = new XboxController(0, Constants.kDeadband);
 
         // Endgame Alert
         /** Must restart robot code for the time change to take effect */
@@ -63,6 +43,7 @@ public final class ControlBoard extends SubsystemBase {
                 DriverStation.isTeleopEnabled()
                     && DriverStation.getMatchTime() > 0
                     && DriverStation.getMatchTime() <= Constants.kEndgameAlertTime)
+<<<<<<< Updated upstream
         .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75)
                 .alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
 
@@ -96,6 +77,9 @@ public final class ControlBoard extends SubsystemBase {
     private Rotation2d getDriveRotation() {
         double input = MathUtil.powerWithSign(-driver.rightStickX.get(), Constants.kDriveControlTurnPower);
         return Rotation2d.fromRotations(input * Constants.kDriveControlMaxTurnSpeed);
+=======
+        .onTrue(RumblePatternCommands.endgameAlert(controller, 0.75));
+>>>>>>> Stashed changes
     }
 
     @Override
@@ -103,16 +87,5 @@ public final class ControlBoard extends SubsystemBase {
         if (!DriverStation.isTeleop()) {
             return;
         }
-
-        Translation2d translation = getDriveTranslation();
-        Rotation2d rotation = getDriveRotation();
-
-        ChassisSpeeds chassisRequest = ChassisSpeeds.fromFieldRelativeSpeeds(
-                        translation.getX(),
-                        translation.getY(),
-                        rotation.getRadians(),
-                        robot.drive.getEstimatedPose().getRotation());
-
-        robot.drive.driveAndTurn(SwerveDriveSubsystem.Priority.DRIVER, chassisRequest, DriveRequestType.Velocity);
     }
 }

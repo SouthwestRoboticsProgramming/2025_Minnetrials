@@ -8,8 +8,6 @@ import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.lib.net.NTInteger;
-import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
-import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
 import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
 import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProperties;
 import edu.wpi.first.math.util.Units;
@@ -26,13 +24,10 @@ public final class Constants {
     public static final FieldInfo kField = FieldInfo.CRESCENDO_2024;
     public static final int kEndgameAlertTime = 15;
 
-    // Controls
-    public static final int kDriverControllerPort = 0;
-    public static final int kOperatorControllerPort = 1;
-
     public static final double kDeadband = 0.15;
     public static final double kTriggerThreshold = 0.3;
 
+<<<<<<< Updated upstream
     public static final double kDriveControlMaxAccel = 5000.5; // m/s^2
     public static final double kDriveControlMaxTurnSpeed = 1; // rot/s
     public static final double kDriveControlDrivePower = 2; // Exponent input is raised to
@@ -89,6 +84,8 @@ public final class Constants {
             .withCouplingGearRatio(50.0 / 16)
             .withSteerMotorInverted(true);
 
+=======
+>>>>>>> Stashed changes
     // Vision
     public static final TagTrackerCaptureProperties kTagTrackerCaptureProps = new TagTrackerCaptureProperties()
             .setAutoExposure(false)
@@ -115,8 +112,4 @@ public final class Constants {
     public static final int kLedStripLength = 22;
     public static final int kLowBatteryThreshold = 10; // Volts
     public static final int kLedCurrentShutoffThreshold = 250; // Amps
-
-    // Temperature
-    public static final double kTemperatureInterval = 2; // Seconds
-    public static final double kOverheatingThreshold = 75; // Celsius
 }
