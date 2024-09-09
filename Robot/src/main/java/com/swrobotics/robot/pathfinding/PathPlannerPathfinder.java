@@ -31,7 +31,7 @@ public final class PathPlannerPathfinder implements Pathfinder {
     private Translation2d startPos, goalPos;
     private boolean paramsChanged;
 
-    private PathPlannerPathfinder() {
+    public PathPlannerPathfinder() {
         paramsChanged = false;
     }
 

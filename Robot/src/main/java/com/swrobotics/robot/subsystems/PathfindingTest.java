@@ -5,7 +5,6 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.pathfinding.*;
-import com.swrobotics.robot.pathfinding.async.AsyncLoggedPathPlannerPathfinder;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -55,7 +54,7 @@ public final class PathfindingTest extends SubsystemBase {
                     Constants.kDriveControlMaxTurnSpeed / 0.2);
 
         return Commands.sequence(
-            Commands.runOnce(() -> AsyncLoggedPathPlannerPathfinder.setEnvironment(environment)),
+            Commands.runOnce(() -> PathPlannerPathfinder.setEnvironment(environment)),
             AutoBuilder.pathfindToPose(goal, constraints)
         );
     }
