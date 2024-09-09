@@ -5,10 +5,10 @@ import com.swrobotics.robot.config.Constants;
 import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
-import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
-import com.swrobotics.robot.subsystems.vision.VisionInput;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagSource;
+import com.swrobotics.robot.subsystems.vision.VisionSource;
 import com.swrobotics.robot.subsystems.vision.VisionUpdate;
-import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerInput;
+import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerSource;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
@@ -25,9 +25,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Uses vision estimates and odometry measurements to estimate the robot's pose
+ * on the field.
+ */
 public final class SwerveEstimator {
     private final AprilTagEnvironment environment;
-    private final List<VisionInput> visionInputs;
+    private final List<VisionSource> visionSources;
 
     private Pose2d basePose, latestPose;
     private final TreeMap<Double, PoseUpdate> updates = new TreeMap<>();
@@ -36,17 +40,25 @@ public final class SwerveEstimator {
     private boolean ignoreVision;
 
     public SwerveEstimator() {
-        double halfFrameL = 0.77 / 2;
-        double halfFrameW = 0.695 / 2;
-
+        // Load AprilTag environment from JSON file
         try {
-            environment = AprilTagEnvironment.load("crescendo_field.json");
+            environment = AprilTagEnvironment.load(Constants.kAprilTagJson);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load AprilTag environment!", e);
         }
+        TagTrackerSource.publishTagEnvironment(environment);
 
-        TagTrackerInput.publishTagEnvironment(environment);
+        // Show AprilTag poses on the field view
+        List<Pose2d> tagPoses = new ArrayList<>();
+        for (Pose3d tagPose3d : environment.getAllPoses()) {
+            tagPoses.add(tagPose3d.toPose2d());
+        }
+        FieldView.aprilTagPoses.setPoses(tagPoses);
 
+        double halfFrameL = 0.77 / 2;
+        double halfFrameW = 0.695 / 2;
+
+        // TODO: Come up with cleaner way of specifying camera position
         Transformation3d frontTransform = (camPose) -> camPose
                 // Compensate for mounting angle
                 .transformBy(new Transform3d(new Translation3d(), new Rotation3d(Math.PI, 0, 0)))
@@ -60,16 +72,18 @@ public final class SwerveEstimator {
                 // Compensate for mounting position
                 .transformBy(new Transform3d(new Translation3d(halfFrameL - 0.16, halfFrameW - 0.133, 0.39).unaryMinus(), new Rotation3d()));
 
-        visionInputs = new ArrayList<>();
-        visionInputs.add(new TagTrackerInput(
+        visionSources = new ArrayList<>();
+        visionSources.add(new TagTrackerSource(
                 "front",
                 environment,
                 frontTransform,
-                new RawAprilTagInput.FilterParameters(Constants.kTagTrackerFilterParams)
+                // Only trust front camera when close, its far measurements are
+                // very noisy and inaccurate
+                new RawAprilTagSource.FilterParameters(Constants.kTagTrackerFilterParams)
                         .setMaxTrustDistance(5),
                 Constants.kTagTrackerCaptureProps
         ));
-        visionInputs.add(new TagTrackerInput(
+        visionSources.add(new TagTrackerSource(
                 "zoom",
                 environment,
                 zoomTransform,
@@ -99,10 +113,19 @@ public final class SwerveEstimator {
         this.ignoreVision = ignoreVision;
     }
 
+    /**
+     * @return the current pose estimate
+     */
     public Pose2d getEstimatedPose() {
         return latestPose;
     }
 
+    /**
+     * Sets the pose estimate to a known pose and discards all previous vision
+     * updates.
+     *
+     * @param newPose new known pose to set
+     */
     public void resetPose(Pose2d newPose) {
         basePose = newPose;
         updates.clear();
@@ -126,20 +149,11 @@ public final class SwerveEstimator {
             enabledTimestamp = Double.NaN;
         }
 
-        // Sample vision data before updating drive so the drive is guaranteed
-        // to be the most recent update
         List<VisionUpdate> visionData = new ArrayList<>();
-        for (VisionInput input : visionInputs) {
+        for (VisionSource input : visionSources) {
             visionData.addAll(input.getNewUpdates());
         }
         updates.put(Timer.getFPGATimestamp(), new PoseUpdate(driveTwist, new ArrayList<>()));
-
-//        environment.update();
-        List<Pose2d> tagPoses = new ArrayList<>();
-        for (Pose3d tagPose3d : environment.getAllPoses()) {
-            tagPoses.add(tagPose3d.toPose2d());
-        }
-        FieldView.aprilTagPoses.setPoses(tagPoses);
 
         if (ignoreVision) {
             update(false);
@@ -194,7 +208,7 @@ public final class SwerveEstimator {
             latestPose = entry.getValue().apply(latestPose, selectedQ);
         }
 
-        // Debug field stuffs
+        // Show current estimate and vision updates on field view
         FieldView.robotPose.setPose(latestPose);
         List<Pose2d> visionPoses = new ArrayList<>();
         for (PoseUpdate update : updates.values()) {

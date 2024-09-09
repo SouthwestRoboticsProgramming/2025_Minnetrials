@@ -12,12 +12,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class RawAprilTagInput implements VisionInput {
+/**
+ * A source of raw AprilTag detections - timestamped detections, possibly with
+ * multiple pose estimates due to tag ambiguity
+ */
+public abstract class RawAprilTagSource implements VisionSource {
     private final AprilTagEnvironment environment;
     private final FilterParameters filterParams;
     private final Transformation3d cameraToRobotTransform;
 
-    public RawAprilTagInput(AprilTagEnvironment environment, FilterParameters filterParams, Transformation3d cameraToRobotTransform) {
+    public RawAprilTagSource(AprilTagEnvironment environment, FilterParameters filterParams, Transformation3d cameraToRobotTransform) {
         this.environment = environment;
         this.filterParams = filterParams;
         this.cameraToRobotTransform = cameraToRobotTransform;

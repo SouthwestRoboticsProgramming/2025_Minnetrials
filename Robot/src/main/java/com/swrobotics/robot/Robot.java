@@ -9,6 +9,10 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import org.littletonrobotics.junction.LoggedRobot;
 
+/**
+ * The main robot class.
+ */
+// TODO: Merge with RobotContainer??
 public final class Robot extends LoggedRobot {
     private Command autonomousCommand;
     private final Timer autonomousTimer = new Timer();

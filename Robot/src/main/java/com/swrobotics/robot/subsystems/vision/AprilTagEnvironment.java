@@ -15,6 +15,13 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class AprilTagEnvironment {
+    /**
+     * Loads an environment from a JSON file.
+     *
+     * @param fileName name of the JSON file within the deploy directory
+     * @return loaded environment
+     * @throws IOException if the environment fails to load from the file
+     */
     public static AprilTagEnvironment load(String fileName) throws IOException {
         return new ObjectMapper().readValue(
                 new File(Filesystem.getDeployDirectory(), fileName),
@@ -35,19 +42,31 @@ public final class AprilTagEnvironment {
         }
     }
 
-    // Returns pose if tag exists, else null
+    /**
+     * @param tagId ID of the tag to get
+     * @return pose if AprilTag exists with the specified ID, else null
+     */
     public Pose3d getPose(int tagId) {
         return poses.get(tagId);
     }
 
+    /**
+     * @return collection of the poses of all the tags in the environment
+     */
     public Collection<Pose3d> getAllPoses() {
         return poses.values();
     }
 
+    /**
+     * @return edge length of the tags in meters
+     */
     public double getTagSize() {
         return tagSize;
     }
 
+    /**
+     * @return map from the tag ID to the tag's pose
+     */
     public Map<Integer, Pose3d> getPoseMap() {
         return poses;
     }

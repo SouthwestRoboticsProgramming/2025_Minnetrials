@@ -13,15 +13,27 @@ import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-// Swerve module with TalonFX motors and CanCoder
+/**
+ * Swerve module implementation using the CTRE swerve API. This is a swerve
+ * module with TalonFX motors and a CANcoder absolute encoder.
+ */
 public final class CtreSwerveModuleIO extends SwerveModuleIO {
     private final SwerveModule module;
     private final StatusSignal<Double> canCoderPosition;
 
+    /**
+     * @param name name of this module, for logging and debugging
+     * @param constants CTRE swerve module constants
+     * @param canBus Name of the CAN bus the devices are wired into. All three
+     *               devices must be on the same CAN bus.
+     */
     public CtreSwerveModuleIO(String name, SwerveModuleConstants constants, String canBus) {
         super(name);
         module = new SwerveModule(constants, canBus);
 
+        // Limit drive current. This is needed because stalling all four drive
+        // motors at full power (such as during heavy defense) consumes enough
+        // current to trip the main breaker.
         CurrentLimitsConfigs limits = new CurrentLimitsConfigs();
         limits.SupplyCurrentLimitEnable = true;
         limits.SupplyCurrentLimit = Constants.kDriveCurrentLimit;
@@ -68,7 +80,7 @@ public final class CtreSwerveModuleIO extends SwerveModuleIO {
     }
 
     @Override
-    public void apply(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType) {
+    public void setTarget(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType) {
         module.apply(state, driveRequestType, SwerveModule.SteerRequestType.MotionMagic);
     }
 }

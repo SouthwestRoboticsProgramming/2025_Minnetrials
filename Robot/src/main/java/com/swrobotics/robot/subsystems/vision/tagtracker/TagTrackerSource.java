@@ -1,8 +1,9 @@
 package com.swrobotics.robot.subsystems.vision.tagtracker;
 
+import com.swrobotics.lib.utils.DoubleOutput;
 import com.swrobotics.lib.utils.Transformation3d;
 import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
-import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagSource;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -17,44 +18,51 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class TagTrackerInput extends RawAprilTagInput {
+/**
+ * AprilTag vision source from TagTracker.
+ */
+public final class TagTrackerSource extends RawAprilTagSource {
     private static final String TABLE = "TagTracker";
 
+    /**
+     * Publishes the AprilTag environment for TagTracker to use. This must be
+     * done before TagTracker is able to make any estimates!
+     *
+     * @param environment environment to publish
+     */
     public static void publishTagEnvironment(AprilTagEnvironment environment) {
         Map<Integer, Pose3d> poses = environment.getPoseMap();
 
-        double[] data = new double[poses.size() * 8 + 1];
-        data[0] = environment.getTagSize();
-        int i = 1;
+        DoubleOutput data = new DoubleOutput(poses.size() * 8 + 1);
+
+        data.add(environment.getTagSize());
         for (Map.Entry<Integer, Pose3d> entry : poses.entrySet()) {
-            data[i] = entry.getKey();
+            data.add(entry.getKey());
 
             Pose3d pose = entry.getValue();
             Translation3d tx = pose.getTranslation();
             Quaternion q = pose.getRotation().getQuaternion();
 
-            data[i + 1] = tx.getX();
-            data[i + 2] = tx.getY();
-            data[i + 3] = tx.getZ();
-            data[i + 4] = q.getW();
-            data[i + 5] = q.getX();
-            data[i + 6] = q.getY();
-            data[i + 7] = q.getZ();
-
-            i += 8;
+            data.add(tx.getX());
+            data.add(tx.getY());
+            data.add(tx.getZ());
+            data.add(q.getW());
+            data.add(q.getX());
+            data.add(q.getY());
+            data.add(q.getZ());
         }
 
         NetworkTableInstance.getDefault()
                 .getTable(TABLE)
                 .getEntry("Environment")
-                .setDoubleArray(data);
+                .setDoubleArray(data.toArray());
     }
 
     private final String name;
     private final TagTrackerCameraIO io;
     private final TagTrackerCameraIO.Inputs inputs;
 
-    public TagTrackerInput(
+    public TagTrackerSource(
             String name,
             AprilTagEnvironment environment,
             Transformation3d cameraToRobotTransform,

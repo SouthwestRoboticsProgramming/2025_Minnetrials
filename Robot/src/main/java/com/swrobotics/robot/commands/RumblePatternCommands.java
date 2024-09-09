@@ -24,7 +24,18 @@ public final class RumblePatternCommands {
         );
     }
 
+    /**
+     * Rumbles a controller for a specified amount of time
+     *
+     * @param controller controller to rumble
+     * @param type type of rumbling to do
+     * @param amount strength of the rumble from 0 to 1
+     * @param timeSeconds seconds to rumble the controller for
+     * @return rumble command
+     */
     public static Command rumbleForTimeCommand(XboxController controller, RumbleType type, double amount, double timeSeconds) {
-        return new RunCommand(() -> controller.setRumble(type, amount)).withTimeout(timeSeconds).finallyDo(() -> controller.setRumble(0));
+        return new RunCommand(() -> controller.setRumble(type, amount))
+                .withTimeout(timeSeconds)
+                .finallyDo(() -> controller.setRumble(0));
     }
 }

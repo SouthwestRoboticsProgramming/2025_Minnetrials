@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import com.swrobotics.robot.subsystems.PathfindingTest;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -41,6 +42,7 @@ public class RobotContainer {
     public final LoggedPowerDistribution pdp;
     public final TemperatureTrackerSubsystem temperatureTracker;
     public final SwerveDriveSubsystem drive;
+    public final PathfindingTest pathfindingTest;
 
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
@@ -60,6 +62,8 @@ public class RobotContainer {
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
         drive = new SwerveDriveSubsystem(temperatureTracker);
         lights = new LightsSubsystem(this);
+
+        pathfindingTest = new PathfindingTest(drive);
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);

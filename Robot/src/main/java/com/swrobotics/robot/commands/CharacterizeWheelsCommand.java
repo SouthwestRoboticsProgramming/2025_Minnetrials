@@ -2,13 +2,20 @@ package com.swrobotics.robot.commands;
 
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
-import com.swrobotics.lib.net.NTDouble;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import org.littletonrobotics.junction.Logger;
 
+/**
+ * Command to measure the effective wheel radius on the field carpet.
+ */
 public final class CharacterizeWheelsCommand extends Command {
+    private static final double ROTATION_SPEED = Math.PI; // rad/s
+
     private final SwerveDriveSubsystem drive;
     private SwerveModulePosition[] startingPositions;
     private double lastGyroRad;
@@ -27,6 +34,11 @@ public final class CharacterizeWheelsCommand extends Command {
 
     @Override
     public void execute() {
+        drive.turn(new SwerveDriveSubsystem.TurnRequest(
+                SwerveDriveSubsystem.Priority.AUTO,
+                new Rotation2d(ROTATION_SPEED)
+        ));
+
         double currentGyroRad = drive.getRawGyroRotation().getRadians();
         gyroAccumulatorRad += MathUtil.angleModulus(currentGyroRad - lastGyroRad);
         lastGyroRad = currentGyroRad;
@@ -42,7 +54,13 @@ public final class CharacterizeWheelsCommand extends Command {
         }
         averageWheelDisplacement /= 4;
 
-        double effectiveWheelRadius = (gyroAccumulatorRad * Constants.kDriveRadius) / averageWheelDisplacement;
-	    new NTDouble("Drive/Wheel radius scalar result", 0).set(effectiveWheelRadius);
+        double correctionScalar = (gyroAccumulatorRad * Constants.kDriveRadius) / averageWheelDisplacement;
+        double correctedRadius = Constants.kSwerveConstantsFactory.WheelRadius * correctionScalar;
+
+        // Report result as warning so it shows up in the driver station
+        DriverStation.reportWarning("Corrected wheel radius: " + correctedRadius, false);
+
+        // Also log to AdvantageKit in case we miss the message
+        Logger.recordOutput("Drive/Corrected wheel radius", correctedRadius);
     }
 }

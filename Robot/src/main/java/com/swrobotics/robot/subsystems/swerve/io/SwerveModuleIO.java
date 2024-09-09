@@ -15,18 +15,33 @@ public abstract class SwerveModuleIO {
 
     public abstract void updateInputs(Inputs inputs);
 
+    /**
+     * Reconfigures the CANcoder's magnet offset.
+     *
+     * @param offset new magnet offset in rotations
+     */
     public abstract void setCANcoderMagnetOffset(double offset);
 
-    public abstract void apply(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType);
+    /**
+     * Sets the module's target state.
+     *
+     * @param state target module state
+     * @param driveRequestType type of drive request to use
+     */
+    public abstract void setTarget(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType);
 
     public String getName() {
         return name;
     }
 
     public static final class Inputs extends AutoLoggedInputs {
+        /** Total distance the module has traveled in meters */
         public double drivePosition = 0;
+        /** Current velocity of the drive in meters/second */
         public double driveVelocity = 0;
+        /** Current angle of the wheel in CCW rotations */
         public double angle = 0;
+        /** Current position of the CANcoder in CCW rotations */
         public double canCoderPos = 0;
 
         public SwerveModuleState getState() {

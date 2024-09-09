@@ -7,10 +7,16 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
+/**
+ * Subsystem to track the temperature of all the motors in the robot to detect
+ * if something is overheating.
+ */
 public final class TemperatureTrackerSubsystem extends SubsystemBase {
-    private static TemperatureTrackerSubsystem instance = new TemperatureTrackerSubsystem();
+    private static TemperatureTrackerSubsystem instance = null;
 
     public static TemperatureTrackerSubsystem getInstance() {
+        if (instance == null)
+            throw new IllegalStateException("TemperatureTrackerSubsystem is not yet initialized");
         return instance;
     }
 
@@ -20,6 +26,8 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
     private boolean overheating;
 
     public TemperatureTrackerSubsystem() {
+        if (instance != null)
+            throw new IllegalStateException("TemperatureTrackerSubsystem already initialized");
         instance = this;
 
         if (RobotBase.isReal())
@@ -34,12 +42,19 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
         overheating = false;
     }
 
+    /**
+     * Adds a motor to be monitored.
+     *
+     * @param name name of the motor for logging
+     * @param motor motor to add
+     */
     public void addMotor(String name, TalonFX motor) {
         io.addMotor(name, motor);
     }
 
     @Override
     public void periodic() {
+        // Only sample temperature every so often
         if (!periodicTimer.advanceIfElapsed(Constants.kTemperatureInterval))
             return;
 

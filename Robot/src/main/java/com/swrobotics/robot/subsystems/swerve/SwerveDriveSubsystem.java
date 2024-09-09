@@ -1,9 +1,10 @@
 package com.swrobotics.robot.subsystems.swerve;
 
+import com.pathplanner.lib.pathfinding.Pathfinding;
 import com.swrobotics.lib.net.NTBoolean;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
-
+import com.swrobotics.robot.pathfinding.PathPlannerPathfinder;
 import com.swrobotics.robot.subsystems.swerve.io.*;
 import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -110,7 +111,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
             moduleInputs[i] = new SwerveModuleIO.Inputs();
         }
 
-        this.kinematics = new SwerveKinematics(positions, Constants.kMaxAchievableSpeed);
+        this.kinematics = new SwerveKinematics(positions);
         this.estimator = new SwerveEstimator();
         this.setpointGenerator = new SwerveSetpointGenerator(positions);
 
@@ -139,6 +140,8 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
 
         PathPlannerLogging.setLogActivePathCallback(FieldView.pathPlannerPath::setPoses);
         PathPlannerLogging.setLogTargetPoseCallback(FieldView.pathPlannerSetpoint::setPose);
+
+        Pathfinding.setPathfinder(new PathPlannerPathfinder());
     }
 
     public SwerveModuleState[] getCurrentModuleStates() {
@@ -239,7 +242,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
                     limits, prevSetpoints, requestedSpeeds, Constants.kPeriodicTime);
             SwerveModuleState[] moduleSetpoints = setpoints.moduleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
-                moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
+                moduleIOs[i].setTarget(moduleSetpoints[i], currentDriveRequest.type);
             }
             prevSetpoints = setpoints;
             Logger.recordOutput("Drive/Module Desired Setpoints", setpoints.desiredModuleStates);

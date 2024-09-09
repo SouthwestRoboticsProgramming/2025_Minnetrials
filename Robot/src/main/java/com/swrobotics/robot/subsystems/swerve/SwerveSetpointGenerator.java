@@ -11,10 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Helper to adjust the swerve setpoint to keep the drive base within a set of
+ * {@link SwerveKinematicLimits}.
+ *
+ * Mostly from team 254's 2023 robot code:
+ * https://github.com/Team254/FRC-2023-Public/blob/main/src/main/java/com/team254/lib/swerve/SwerveSetpointGenerator.java
+ * With some improvements and modifications
+ */
 public final class SwerveSetpointGenerator {
     private final Translation2d[] modules;
     private final SwerveDriveKinematics kinematics;
 
+    /**
+     * @param modules positions of the modules relative to the center
+     *                of the drive base, in meters
+     */
     public SwerveSetpointGenerator(Translation2d[] modules) {
         this.modules = modules;
         this.kinematics = new SwerveDriveKinematics(modules);
