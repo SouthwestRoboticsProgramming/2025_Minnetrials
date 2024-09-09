@@ -20,7 +20,7 @@ public final class SimTemperatureIO implements TemperatureIO {
     }
 
     @Override
-    public void addMotor(String name, String canBus, TalonFX motor) {
+    public void addMotor(String name, TalonFX motor) {
         names.add(name);
     }
 }

@@ -46,11 +46,10 @@ public final class TemperatureTrackerSubsystem extends SubsystemBase {
      * Adds a motor to be monitored.
      *
      * @param name name of the motor for logging
-     * @param canBus CAN bus the motor is attached to
      * @param motor motor to add
      */
-    public void addMotor(String name, String canBus, TalonFX motor) {
-        io.addMotor(name, canBus, motor);
+    public void addMotor(String name, TalonFX motor) {
+        io.addMotor(name, motor);
     }
 
     @Override

@@ -1,6 +1,10 @@
 package com.swrobotics.lib.net;
 
-/** Represents a {@code int} value stored in NetworkTables. */
+/**
+ * Represents a {@code int} value stored in NetworkTables.
+ * @deprecated Not replayable with AdvantageKit
+ */
+@Deprecated
 public final class NTInteger extends NTPrimitive<Integer> {
     private final int defaultVal;
 

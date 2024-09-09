@@ -13,7 +13,9 @@ import java.util.Objects;
  * Represents one data entry in NetworkTables.
  *
  * @param <T> data type
+ * @deprecated Not replayable with AdvantageKit
  */
+@Deprecated
 public abstract class NTPrimitive<T> extends NTEntry<T> {
     protected final NetworkTableEntry entry;
     private final T defaultVal;
