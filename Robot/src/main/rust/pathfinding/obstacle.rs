@@ -24,12 +24,6 @@ pub enum Obstacle {
 }
 
 impl Obstacle {
-    // pub fn convert_into(&self, inflate: f64, arcs: &mut Vec<Arc>, segments: &mut Vec<Segment>) {
-    //     match self {
-    //         Self::Circle(c) => convert_circle(c, inflate, arcs),
-    //         Self::Polygon(p) => convert_polygon(p, inflate, arcs, segments),
-    //     };
-    // }
     pub fn convert_into_env(&self, inflate: f64) -> EnvPolygon {
         match self {
             Obstacle::Circle(c) => convert_circle(c, inflate),
@@ -39,12 +33,6 @@ impl Obstacle {
 }
 
 fn convert_circle(circle: &Circle, inflate: f64) -> EnvPolygon {
-    // arcs.push(Arc {
-    //     center: circle.position,
-    //     radius: circle.radius + inflate,
-    //     min_angle: 0.0,
-    //     max_angle: 0.0,
-    // });
     EnvPolygon {
         arcs: vec![Arc {
             center: circle.position,
@@ -81,7 +69,6 @@ fn convert_polygon(polygon: &Polygon, inflate: f64) -> EnvPolygon {
 
         let from = vertex + offset;
         let to = prev + offset;
-        // segments.push(Segment { from, to });
 
         let next = polygon.vertices[(i + 1) % size];
         let edge_angle = delta.angle();

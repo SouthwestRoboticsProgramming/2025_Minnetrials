@@ -92,9 +92,6 @@ pub fn to_bezier(result: &PathResult, start: Vec2f, goal: Vec2f) -> Vec<Vec2f> {
         } else {
             let l = 4.0 / 3.0 * (diff / 4.0).tan() * arc.radius;
 
-            // FIXME: Split the arc if it's over 180 degrees, since the approximation becomes significantly worse there
-            //  Not fixing this year, field has no geometry that can cause this problem
-
             bezier_pts.push(in_pt);
             bezier_pts.push(in_pt + (in_pt - last_pt).norm() * l);
             bezier_pts.push(

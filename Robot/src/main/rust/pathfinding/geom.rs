@@ -550,13 +550,6 @@ impl Environment {
             all_segments.append(&mut segments);
         }
 
-        // let mut arcs = Vec::new();
-        // let mut segments = Vec::new();
-
-        // for obstacle in obstacles {
-        //     obstacle.convert_into(inflate, &mut arcs, &mut segments);
-        // }
-
         let mut field = Self {
             segments: all_segments,
             visibility: Vec::with_capacity(all_arcs.len() * 2),
@@ -623,8 +616,6 @@ impl Environment {
         if !goal_reachable {
             return None;
         }
-
-        let mut tangents: ArrayVec<_, 2> = ArrayVec::new();
 
         let mut frontier = BinaryHeap::new();
         let mut start_changed = false;
@@ -997,30 +988,6 @@ impl Environment {
             if let Some(_) = find_segment_intersection(segment, seg) {
                 return false;
             }
-            // let d1 = segment.to - segment.from;
-            // let d2 = seg.to - seg.from;
-
-            // let vp = d1.x * d2.y - d2.x * d1.y;
-            // if vp.abs() < 0.001 {
-            //     // Ignore collision if the segments are collinear
-            //     // This is so a segment between two vertices of a polygon cannot
-            //     // collide with its own edge
-            //     continue;
-            // }
-
-            // let v = seg.from - segment.from;
-
-            // let k1 = (v.x * d2.y - v.y * d2.x) / vp;
-            // if k1 < 0.0 || k1 > 1.0 {
-            //     continue;
-            // }
-
-            // let k2 = (v.x * d1.y - v.y * d1.x) / vp;
-            // if k2 < 0.0 || k2 > 1.0 {
-            //     continue;
-            // }
-
-            // return false;
         }
 
         return true;
