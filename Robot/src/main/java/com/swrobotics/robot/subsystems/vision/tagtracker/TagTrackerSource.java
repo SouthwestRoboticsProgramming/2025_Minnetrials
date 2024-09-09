@@ -17,9 +17,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AprilTag vision source from TagTracker.
+ */
 public final class TagTrackerSource extends RawAprilTagSource {
     private static final String TABLE = "TagTracker";
 
+    /**
+     * Publishes the AprilTag environment for TagTracker to use. This must be
+     * done before TagTracker is able to make any estimates!
+     *
+     * @param environment environment to publish
+     */
     public static void publishTagEnvironment(AprilTagEnvironment environment) {
         Map<Integer, Pose3d> poses = environment.getPoseMap();
 
@@ -33,6 +42,7 @@ public final class TagTrackerSource extends RawAprilTagSource {
             Translation3d tx = pose.getTranslation();
             Quaternion q = pose.getRotation().getQuaternion();
 
+            // TODO: Use a DoubleOutput
             data[i + 1] = tx.getX();
             data[i + 2] = tx.getY();
             data[i + 3] = tx.getZ();

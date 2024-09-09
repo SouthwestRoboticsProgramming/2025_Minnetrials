@@ -2,6 +2,9 @@ package com.swrobotics.robot.subsystems.vision.tagtracker;
 
 import edu.wpi.first.networktables.*;
 
+/**
+ * TagTracker IO implementation for NetworkTables communication.
+ */
 public final class NTCameraIO implements TagTrackerCameraIO {
     private final RawSubscriber posesSub;
 

@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A source of raw AprilTag detections - timestamped detections, possibly with
+ * multiple pose estimates due to tag ambiguity
+ */
 public abstract class RawAprilTagSource implements VisionSource {
     private final AprilTagEnvironment environment;
     private final FilterParameters filterParams;
