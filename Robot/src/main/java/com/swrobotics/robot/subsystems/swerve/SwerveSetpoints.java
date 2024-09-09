@@ -4,6 +4,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public final class SwerveSetpoints {
+    /**
+     * Creates the initial setpoints (not moving).
+     * @param moduleCount number of swerve modules
+     * @return initial setpoints
+     */
     public static SwerveSetpoints createInitial(int moduleCount) {
         SwerveModuleState[] states = new SwerveModuleState[moduleCount];
         for (int i = 0; i < moduleCount; i++) {

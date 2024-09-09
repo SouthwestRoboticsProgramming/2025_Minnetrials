@@ -7,9 +7,19 @@ import edu.wpi.first.wpilibj.util.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fun LED animation that shows pride flags while the robot is disabled.
+ */
 public final class PrideSequencer {
     private static final record Flag(Stripe[] stripes, int weight) {}
 
+    /**
+     * Flag pattern definitions.
+     * Colors are written as a string containing the hex codes of each stripe,
+     * separated by commas. If a stripe is wider, you can add * followed by the
+     * thickness. Example: "123456,654321*2" has a stripe of color 123456, and
+     * another with twice the thickness of color 654321.
+     */
     private static final Flag[] FLAGS = {
             // 4x pride so it shows up more often
             createFlag("ff1e26,fe941e,ffff00,06bd00,001a98,760088", 4), // Pride
@@ -66,9 +76,13 @@ public final class PrideSequencer {
         return new Flag(stripes.toArray(new Stripe[0]), patternWeight);
     }
 
+    // Number of times to repeat the flag pattern along the strip
     private static final int REPEAT = 1;
+    // Time in seconds to scroll through the full pattern
     private static final float SCROLL = 4f;
+    // Time in seconds that each flag is shown for
     private static final double PRESENT_TIME = 10;
+    // Time in seconds of the fade in/out between flags
     private static final double TRANSITION_TIME = 0.5;
 
     private Stripe[] current;
@@ -88,6 +102,8 @@ public final class PrideSequencer {
             }
         }
 
+        // Choose random flag that's different from the current one, making
+        // flags with higher weight more likely to be chosen
         int randomWeight = (int) (Math.random() * totalWeight);
         Stripe[] flagStripes = FLAGS[FLAGS.length - (currentIdx == FLAGS.length - 1 ? 2 : 1)].stripes;
         int acc = 0;
@@ -102,6 +118,7 @@ public final class PrideSequencer {
             }
         }
 
+        // Repeat the flag stripes
         current = new Stripe[flagStripes.length * REPEAT];
         for (int i = 0; i < REPEAT; i++) {
             System.arraycopy(flagStripes, 0, current, i * flagStripes.length, flagStripes.length);
@@ -109,14 +126,16 @@ public final class PrideSequencer {
         currentStartTimestamp = Timer.getFPGATimestamp();
     }
 
-    private Stripe[] darken(Stripe[] pattern, double bright) {
+    // Makes a copy of the pattern with darker colors
+    // Brightness of 0 is black, brightness of 1 is full color
+    private Stripe[] darken(Stripe[] pattern, double brightness) {
         Stripe[] newPattern = new Stripe[pattern.length];
         for (int i = 0; i < pattern.length; i++) {
             Color col = pattern[i].color();
             Color newCol = new Color(
-                    col.red * bright,
-                    col.green * bright,
-                    col.blue * bright
+                    col.red * brightness,
+                    col.green * brightness,
+                    col.blue * brightness
             );
             newPattern[i] = new Stripe(newCol, pattern[i].weight());
         }
@@ -129,16 +148,23 @@ public final class PrideSequencer {
         double time = Timer.getFPGATimestamp();
         double elapsed = time - currentStartTimestamp;
 
+        // Reached the end of the flag time, start a new one
         if (elapsed > PRESENT_TIME + TRANSITION_TIME * 2) {
             selectNext();
             elapsed = 0;
         }
 
-        Stripe[] toSet = current;
-        if (elapsed < TRANSITION_TIME)
+        Stripe[] toSet;
+        if (elapsed < TRANSITION_TIME) {
+            // Fading in
             toSet = darken(current, elapsed / TRANSITION_TIME);
-        else if (elapsed > PRESENT_TIME + TRANSITION_TIME)
+        } else if (elapsed > PRESENT_TIME + TRANSITION_TIME) {
+            // Fading out
             toSet = darken(current, 1 - (elapsed - PRESENT_TIME - TRANSITION_TIME) / TRANSITION_TIME);
+        } else {
+            // Showing the flag
+            toSet = current;
+        }
 
         lights.applyStripes(SCROLL, toSet);
     }

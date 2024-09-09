@@ -3,9 +3,11 @@ package com.swrobotics.robot.pathfinding.async;
 import java.util.List;
 import java.util.Objects;
 
+import com.swrobotics.robot.pathfinding.PathEnvironment;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public final class AsyncThreadedPathfinderIO implements AsyncPathfinderIO {
+    private record PathParams(PathEnvironment env, Translation2d start, Translation2d goal) {}
     private record CalcResult(PathParams params, List<Translation2d> path) {}
     
     private final Object notifier = new Object();
@@ -22,7 +24,9 @@ public final class AsyncThreadedPathfinderIO implements AsyncPathfinderIO {
     }
 
     @Override
-    public void requestPath(PathParams newParams) {
+    public void requestPath(PathEnvironment env, Translation2d start, Translation2d goal) {
+        PathParams newParams = new PathParams(env, start, goal);
+
         // If parameters changed, wake up finding thread
         if (!Objects.equals(newParams, params)) {
             this.params = newParams;

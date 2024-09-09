@@ -1,10 +1,12 @@
 package com.swrobotics.robot.commands;
 
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /**
- * ONLY works in disabled
+ * Command to play a song using the robot's motors. Only works when the robot
+ * is disabled!
  */
 public final class PlaySongCommand extends Command {
     private final MusicSubsystem music;
@@ -28,7 +30,7 @@ public final class PlaySongCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        return !music.isSongPlaying();
+        return DriverStation.isEnabled() || !music.isSongPlaying();
     }
 
     @Override

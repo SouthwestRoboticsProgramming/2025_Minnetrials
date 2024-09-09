@@ -7,10 +7,9 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 import com.swrobotics.lib.field.FieldInfo;
 import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
-import com.swrobotics.lib.net.NTInteger;
 import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
 import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
-import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagSource;
 import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProperties;
 import edu.wpi.first.math.util.Units;
 
@@ -90,17 +89,24 @@ public final class Constants {
             .withSteerMotorInverted(true);
 
     // Pathfinding
+    public static final String kPathfindingJson = "crescendo_pathfinding.json";
     public static final double kRobotRadius = 0.6202230647076; // m
     public static final double kPathfindingTolerance = 0.2; // m
 
     // Vision
+    public static final String kAprilTagJson = "crescendo_apriltag.json";
+
+    // These need to be tuned during field calibration time at every event.
+    // They can be adjusted manually in NetworkTables at TagTracker/<Camera>/Config/...
+    // Don't forget to set your adjusted values here! The NetworkTables values
+    // do not save.
     public static final TagTrackerCaptureProperties kTagTrackerCaptureProps = new TagTrackerCaptureProperties()
             .setAutoExposure(false)
             .setExposure(20)
             .setGain(1)
             .setTargetFps(50);
 
-    public static final RawAprilTagInput.FilterParameters kTagTrackerFilterParams = new RawAprilTagInput.FilterParameters()
+    public static final RawAprilTagSource.FilterParameters kTagTrackerFilterParams = new RawAprilTagSource.FilterParameters()
             .setAmbiguityThreshold(0.9)
             .setXYStdDevCoefficient(0.01)
             .setThetaStdDevCoefficient(0.01)

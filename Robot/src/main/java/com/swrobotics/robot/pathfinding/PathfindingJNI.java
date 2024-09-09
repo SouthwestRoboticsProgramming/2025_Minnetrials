@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public final class PathfindingJNI {
+    // Name of the Rust crate containing the pathfinder
     private static final String LIBRARY_NAME = "pathfinding_jni";
 
     static {

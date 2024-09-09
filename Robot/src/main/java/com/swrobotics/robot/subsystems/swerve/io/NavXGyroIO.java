@@ -3,6 +3,9 @@ package com.swrobotics.robot.subsystems.swerve.io;
 import com.kauailabs.navx.frc.AHRS;
 import edu.wpi.first.wpilibj.SPI;
 
+/**
+ * GyroIO implementation for the NavX2 gyroscope in the RoboRIO MXP port.
+ */
 public final class NavXGyroIO implements GyroIO {
     private final AHRS navx;
 

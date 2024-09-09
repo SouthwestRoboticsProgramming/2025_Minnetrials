@@ -39,10 +39,12 @@ public final class LightsSubsystem extends SubsystemBase {
     }
 
     private void showOverheating() {
+        // Flashing red lights
         applySolid(Timer.getFPGATimestamp() % 0.4 > 0.2 ? Color.kRed : Color.kBlack);
     }
 
     private void showLowBattery() {
+        // Flashing orange lights
         applySolid(Timer.getFPGATimestamp() % 0.4 > 0.2 ? Color.kOrange : Color.kBlack);
     }
 
@@ -58,6 +60,7 @@ public final class LightsSubsystem extends SubsystemBase {
     }
 
     private void showIdle() {
+        // Lights off
         applySolid(Color.kBlack);
     }
 
@@ -86,6 +89,7 @@ public final class LightsSubsystem extends SubsystemBase {
         commandRequest = null;
     }
 
+    /** Sets all the LEDs to the same color */
     private void applySolid(Color color) {
         for (int i = 0; i < Constants.kLedStripLength; i++) {
             data.setLED(i, color);
@@ -95,6 +99,7 @@ public final class LightsSubsystem extends SubsystemBase {
 
     public static final record Stripe(Color color, float weight) {}
 
+    // Blends between two colors
     private Color interpolate(Color a, Color b, float percent) {
         return new Color(
                 MathUtil.lerp(a.red, b.red, percent),
@@ -157,6 +162,12 @@ public final class LightsSubsystem extends SubsystemBase {
         prideSequencer.reset();
     }
 
+    /**
+     * Called by commands in {@link com.swrobotics.robot.commands.LightCommands}.
+     * Should not be called manually.
+     *
+     * @param color color to set
+     */
     public void setCommandRequest(Color color) {
         commandRequest = color;
     }

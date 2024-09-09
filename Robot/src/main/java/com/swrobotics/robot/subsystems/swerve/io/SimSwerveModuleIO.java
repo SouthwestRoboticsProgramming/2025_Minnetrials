@@ -5,9 +5,17 @@ import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.config.Constants;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
+/**
+ * Swerve module implementation for simulation. This is used instead of the
+ * CTRE simulation API because simulation of the CTRE swerve API is currently
+ * somewhat unstable.
+ */
 public final class SimSwerveModuleIO extends SwerveModuleIO {
+    // Current module state
     private SwerveModuleState state;
+    // Total distance traveled by the module (drive motor encoder, meters)
     private double simDistance;
+    // Offset of the CANcoder to the wheel angle (rotations)
     private double magnetOffset;
 
     public SimSwerveModuleIO(String name, double magnetOffset) {
@@ -34,7 +42,8 @@ public final class SimSwerveModuleIO extends SwerveModuleIO {
     }
 
     @Override
-    public void apply(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType) {
+    public void setTarget(SwerveModuleState state, SwerveModule.DriveRequestType driveRequestType) {
+        // Set current state directly to target state
         this.state = SwerveModuleState.optimize(state, this.state.angle);
     }
 }

@@ -10,10 +10,20 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * An obstacle for the pathfinder to avoid
+ */
 public abstract class Obstacle {
     abstract void addToJNIObstacleList(long obsHandle);
 
-    public static List<Obstacle> loadFromJson(String fileName) throws IOException {
+    /**
+     * Loads a set of obstacles from a JSON file.
+     *
+     * @param fileName path to the file in the deploy directory
+     * @return loaded obstacles
+     * @throws IOException if the file loading fails
+     */
+    public static List<Obstacle> loadObstaclesFromJson(String fileName) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
 
         File file = new File(Filesystem.getDeployDirectory(), fileName);

@@ -2,7 +2,7 @@ package com.swrobotics.robot.subsystems.vision.tagtracker;
 
 import com.swrobotics.lib.utils.Transformation3d;
 import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
-import com.swrobotics.robot.subsystems.vision.RawAprilTagInput;
+import com.swrobotics.robot.subsystems.vision.RawAprilTagSource;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class TagTrackerInput extends RawAprilTagInput {
+public final class TagTrackerSource extends RawAprilTagSource {
     private static final String TABLE = "TagTracker";
 
     public static void publishTagEnvironment(AprilTagEnvironment environment) {
@@ -54,7 +54,7 @@ public final class TagTrackerInput extends RawAprilTagInput {
     private final TagTrackerCameraIO io;
     private final TagTrackerCameraIO.Inputs inputs;
 
-    public TagTrackerInput(
+    public TagTrackerSource(
             String name,
             AprilTagEnvironment environment,
             Transformation3d cameraToRobotTransform,

@@ -8,11 +8,24 @@ import edu.wpi.first.math.geometry.Translation2d;
 
 import java.util.Arrays;
 
+/**
+ * Polygonal pathfinding obstacle
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class Polygon extends Obstacle {
     private final Translation2d[] vertices;
 
+    /**
+     * Creates a new polygon with the specified vertices. The polygon may be
+     * concave, but must not contain any concave regions the robot does not fit
+     * inside. If the vertices are in counterclockwise order, the path will not
+     * be allowed to pass inside it. If they are in clockwise order, the path
+     * will not be allowed to pass <i>outside</i> it, which is useful for the
+     * field perimeter.
+     *
+     * @param vertices vertices of the polygon
+     */
     @JsonCreator
     public Polygon(
             @JsonProperty(required = true, value = "vertices") Translation2d... vertices) {

@@ -6,6 +6,15 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.*;
 
 public final class LightCommands {
+    /**
+     * @param lights LightsSubsystem instance
+     * @param blinks number of times to blink
+     * @param color color to blink the lights
+     * @param totalTimeSeconds total time in seconds for the blink sequence
+     * @param onPercent duty cycle of the blinking from 0 to 1, higher means on
+     *                  more of the time
+     * @return blink command
+     */
     public static Command blink(LightsSubsystem lights, int blinks, Color color, double totalTimeSeconds, double onPercent) {
         if (onPercent < 0 || onPercent > 1)
             throw new IllegalArgumentException("onPercent must be between 0 and 1");
@@ -29,14 +38,35 @@ public final class LightCommands {
         return sequence;
     }
 
+    /**
+     * Blinks the lights for 0.5 seconds with 50% duty cycle.
+     *
+     * @param lights LightsSubsystem instance
+     * @param blinks number of times to blink
+     * @param color color to blink the lights
+     * @return blink command
+     */
     public static Command blink(LightsSubsystem lights, int blinks, Color color) {
         return blink(lights, blinks, color, 0.5, 0.5);
     }
 
+    /**
+     * Blinks the lights 3 times in 0.5 seconds with 50% duty cycle.
+     *
+     * @param lights LightsSubsystem instance
+     * @param color color to blink the lights
+     * @return blink command
+     */
     public static Command blink(LightsSubsystem lights, Color color) {
         return blink(lights, 3, color);
     }
 
+    /**
+     * @param lights LightsSubsystem instance
+     * @param color color to set the lights
+     * @param seconds how long to set that color
+     * @return set color command
+     */
     public static Command setColorForTime(LightsSubsystem lights, Color color, double seconds) {
         return Commands.run(() -> lights.setCommandRequest(color)).withTimeout(seconds);
     }

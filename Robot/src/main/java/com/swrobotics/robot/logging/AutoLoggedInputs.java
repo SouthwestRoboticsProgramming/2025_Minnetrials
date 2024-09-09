@@ -4,9 +4,18 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Helper for input classes to automatically log their fields. This will log
+ * all fields that are public and not static or final. Only fields of the types
+ * {@code int}, {@code long}, {@code float}, {@code double}, {@code String},
+ * {@code boolean}, or single-dimensional arrays of those types, as well as
+ * {@code byte[]} are supported. If other types are needed, you will need to
+ * implement {@code LoggableInputs} manually.
+ */
 public abstract class AutoLoggedInputs implements LoggableInputs {
     private enum LogType {
         Raw,
@@ -73,8 +82,16 @@ public abstract class AutoLoggedInputs implements LoggableInputs {
     private final LogEntry[] entries;
 
     public AutoLoggedInputs() {
+        // Index the available fields in this class beforehand. This is
+        // somewhat slow, so we do it in the constructor, which should
+        // only be called once at the start of the robot program.
         List<LogEntry> entries = new ArrayList<>();
         for (Field field : getClass().getFields()) {
+            // Skip static and final fields
+            int mods = field.getModifiers();
+            if (Modifier.isFinal(mods) || Modifier.isStatic(mods))
+                continue;
+
             entries.add(new LogEntry(this, field));
         }
         this.entries = entries.toArray(new LogEntry[0]);

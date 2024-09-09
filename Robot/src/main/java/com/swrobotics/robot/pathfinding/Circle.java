@@ -6,12 +6,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.wpi.first.math.geometry.Translation2d;
 
+/**
+ * Circular pathfinding obstacle
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 public final class Circle extends Obstacle {
     private final Translation2d center;
     private final double radius;
 
+    /**
+     * @param center center point of the circle
+     * @param radius radius of the circle
+     */
     @JsonCreator
     public Circle(
             @JsonProperty(required = true, value = "center") Translation2d center,

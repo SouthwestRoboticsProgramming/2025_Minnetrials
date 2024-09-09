@@ -11,16 +11,26 @@ import com.pathplanner.lib.pathfinding.Pathfinder;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.pathfinding.PathEnvironment;
-import com.swrobotics.robot.pathfinding.async.AsyncPathfinderIO.PathParams;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 
+/**
+ * PathPlanner pathfinding implementation using the arc pathfinder running in
+ * a separate thread, logged using AdvantageKit.
+ */
+// TODO: Better name?
 public final class AsyncLoggedPathPlannerPathfinder implements Pathfinder {
     private static PathEnvironment env = null;
 
+    /**
+     * Sets the environment for paths to be found within. An environment must
+     * be set before any paths are requested.
+     *
+     * @param env new environment
+     */
     public static void setEnvironment(PathEnvironment env) {
         AsyncLoggedPathPlannerPathfinder.env = env;
     }
@@ -37,10 +47,11 @@ public final class AsyncLoggedPathPlannerPathfinder implements Pathfinder {
         if (RobotBase.isReal() || RobotContainer.SIM_MODE != Logging.SimMode.REPLAY) {
             io = new AsyncThreadedPathfinderIO();
         } else {
-            // Don't bother starting solver thread, replay will overwrite results
+            // Don't bother starting solver thread, replay will overwrite
+            // results. Instead use an IO that does nothing
             io = new AsyncPathfinderIO() {
                 @Override
-                public void requestPath(PathParams params) {}
+                public void requestPath(PathEnvironment env, Translation2d start, Translation2d goal) {}
 
                 @Override
                 public void updateInputs(Inputs inputs) {}
@@ -61,13 +72,16 @@ public final class AsyncLoggedPathPlannerPathfinder implements Pathfinder {
         if (startPosition == null)
             throw new IllegalStateException("No start position set");
 
-        io.requestPath(new PathParams(env, startPosition, goalPosition));
+        this.goalPosition = goalPosition;
+        io.requestPath(env, startPosition, goalPosition);
         reportedThisResult = false;
     }
 
     @Override
     public boolean isNewPathAvailable() {
-        // Only report path calculation result once
+        // Only report path calculation result once. PathPlanner does not
+        // follow the path correctly if it is continuously updated as the robot
+        // travels
         if (reportedThisResult)
             return false;
 

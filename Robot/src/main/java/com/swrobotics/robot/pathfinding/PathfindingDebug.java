@@ -1,5 +1,6 @@
 package com.swrobotics.robot.pathfinding;
 
+import com.swrobotics.lib.utils.DoubleInput;
 import com.swrobotics.lib.utils.MathUtil;
 import com.swrobotics.robot.logging.DebugGraphics;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -10,26 +11,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public final class PathfindingDebug {
-    private static final class Input {
-        private final double[] data;
-        private int index;
-
-        public Input(double[] data) {
-            this.data = data;
-            index = 0;
-        }
-
-        public double next() {
-            return data[index++];
-        }
-    }
-
     public static final class Arc {
         public final double centerX, centerY;
         public final double radius;
         public final double minAngle, maxAngle;
 
-        public Arc(Input in) {
+        public Arc(DoubleInput in) {
             centerX = in.next();
             centerY = in.next();
             radius = in.next();
@@ -42,7 +29,7 @@ public final class PathfindingDebug {
         public final double x1, y1;
         public final double x2, y2;
 
-        public Segment(Input in) {
+        public Segment(DoubleInput in) {
             x1 = in.next();
             y1 = in.next();
             x2 = in.next();
@@ -53,7 +40,7 @@ public final class PathfindingDebug {
     public static final class Triangle {
         public final Translation2d v1, v2, v3;
 
-        public Triangle(Input in) {
+        public Triangle(DoubleInput in) {
             v1 = new Translation2d(in.next(), in.next());
             v2 = new Translation2d(in.next(), in.next());
             v3 = new Translation2d(in.next(), in.next());
@@ -63,7 +50,7 @@ public final class PathfindingDebug {
     public static final class EnvPolygon {
         public Triangle[] internalRegion;
 
-        public EnvPolygon(Input in) {
+        public EnvPolygon(DoubleInput in) {
             internalRegion = new Triangle[(int) in.next()];
             for (int i = 0; i < internalRegion.length; i++) {
                 internalRegion[i] = new Triangle(in);
@@ -76,10 +63,17 @@ public final class PathfindingDebug {
     public final Segment[] segments;
     public final EnvPolygon[] envPolygons;
 
+    /**
+     * Decodes the pathfinding debug data array provided.
+     *
+     * @param obstacles obstacles in the environment
+     * @param data debug data
+     * @throws ArrayIndexOutOfBoundsException if the debug data is incomplete
+     */
     public PathfindingDebug(List<Obstacle> obstacles, double[] data) {
         this.obstacles = obstacles;
 
-        Input in = new Input(data);
+        DoubleInput in = new DoubleInput(data);
 
         arcs = new Arc[(int) in.next()];
         for (int i = 0; i < arcs.length; i++) {
@@ -97,6 +91,10 @@ public final class PathfindingDebug {
         }
     }
 
+    /**
+     * Draws the debug data into the debug graphics provided
+     * @param g graphics to draw into
+     */
     public void plot(DebugGraphics g) {
         for (Obstacle obs : obstacles) {
             if (obs instanceof Circle circle) {

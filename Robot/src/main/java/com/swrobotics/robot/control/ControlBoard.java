@@ -26,12 +26,14 @@ import java.util.Collections;
 
 public final class ControlBoard extends SubsystemBase {
     /**
+     * Control mapping:
+     *
      * Driver:
-     * Left stick: translation
-     * Right stick X: rotation
+     * Left stick: drive translation
+     * Right stick X: drive rotation
      *
      * Operator:
-     *
+     * nothing!
      */
 
     private static final NTEntry<Boolean> CHARACTERISE_WHEEL_RADIUS = new NTBoolean("Drive/Characterize Wheel Radius", false);
@@ -55,7 +57,6 @@ public final class ControlBoard extends SubsystemBase {
 
         // Test LEDs
         driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
-
         driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
 
         // Endgame Alert
@@ -76,16 +77,24 @@ public final class ControlBoard extends SubsystemBase {
         driver.x.onRising(Commands.defer(robot.pathfindingTest::getFollowCommand, Collections.emptySet()));
     }
 
+    /**
+     * @return translation input for the drive base, in meters/sec
+     */
     private Translation2d getDriveTranslation() {
         double maxSpeed = Constants.kMaxAchievableSpeed;
 
         Translation2d leftStick = driver.getLeftStick();
 
+        // Apply an exponential curve to the driver's input. This allows the
+        // driver to have slower, more precise movement in the center of the
+        // stick, while still having high speed movement towards the edges.
         double rawMag = leftStick.getNorm();
         double powerMag = MathUtil.powerWithSign(rawMag, Constants.kDriveControlDrivePower);
 
+        // Prevent division by zero, which would result in a target velocity of
+        // (NaN, NaN), which motor controllers do not like
         if (rawMag == 0 || powerMag == 0)
-            return new Translation2d(0, 0); // No division by 0
+            return new Translation2d(0, 0);
 
         double targetSpeed = powerMag * maxSpeed;
         double filteredSpeed = driveFilter.calculate(targetSpeed);
@@ -96,6 +105,9 @@ public final class ControlBoard extends SubsystemBase {
                 .rotateBy(FieldInfo.getAllianceForwardAngle()); // Account for driver's perspective
     }
 
+    /**
+     * @return rotation per second input for the drive base
+     */
     private Rotation2d getDriveRotation() {
         double input = MathUtil.powerWithSign(-driver.rightStickX.get(), Constants.kDriveControlTurnPower);
         return Rotation2d.fromRotations(input * Constants.kDriveControlMaxTurnSpeed);
@@ -116,6 +128,7 @@ public final class ControlBoard extends SubsystemBase {
                         rotation.getRadians(),
                         robot.drive.getEstimatedPose().getRotation());
 
+        // TODO: Check if Velocity request type actually uses velocity control
         robot.drive.driveAndTurn(SwerveDriveSubsystem.Priority.DRIVER, chassisRequest, DriveRequestType.Velocity);
     }
 }

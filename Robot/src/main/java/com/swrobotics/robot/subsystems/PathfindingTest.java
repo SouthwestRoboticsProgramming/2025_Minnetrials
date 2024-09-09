@@ -27,7 +27,7 @@ public final class PathfindingTest extends SubsystemBase {
         this.drive = drive;
 
         try {
-            List<Obstacle> obstacles = Obstacle.loadFromJson("crescendo_pathfinding.json");
+            List<Obstacle> obstacles = Obstacle.loadObstaclesFromJson(Constants.kPathfindingJson);
             // Test overlapping obstacles
 //            obstacles.add(new Rectangle(
 //                    new Translation2d(8, 4),

@@ -1,61 +1,50 @@
 package com.swrobotics.robot.pathfinding;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinder;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import org.littletonrobotics.junction.Logger;
 
 import java.util.List;
 
+/**
+ * PathPlanner pathfinding implementation using the arc pathfinder
+ */
 // TODO: Do we want to multithread? Depends on pathfinder's performance on RoboRIO
 public final class PathPlannerPathfinder implements Pathfinder {
-    public static Command pathfindToPose(PathEnvironment env, Pose2d goal, PathConstraints constraints) {
-        Command ppCommand = AutoBuilder.pathfindToPose(goal, constraints);
-        return Commands.sequence(
-                Commands.runOnce(() -> INSTANCE.setEnvironment(env)),
-                ppCommand
-        );
+    private static PathEnvironment env;
+
+    /**
+     * Sets the environment for paths to be found within. An environment must
+     * be set before any paths are requested.
+     *
+     * @param env new environment
+     */
+    public static void setEnvironment(PathEnvironment env) {
+        PathPlannerPathfinder.env = env;
     }
-
-    private static final PathPlannerPathfinder INSTANCE = new PathPlannerPathfinder();
-
-    private PathEnvironment environment;
 
     private Translation2d startPos, goalPos;
     private boolean paramsChanged;
 
-    public static PathPlannerPathfinder getInstance() {
-        return INSTANCE;
-    }
-
     private PathPlannerPathfinder() {
-        environment = null;
         paramsChanged = false;
     }
 
     @Override
     public boolean isNewPathAvailable() {
-        if (environment == null)
+        if (env == null)
             DriverStation.reportError("No pathfinding environment set", false);
 
         // New path is always available - we can compute it in less than one periodic cycle
         return paramsChanged
-                && environment != null
+                && env != null
                 && startPos != null
                 && goalPos != null;
-    }
-
-    public void setEnvironment(PathEnvironment environment) {
-        paramsChanged = true;
-        this.environment = environment;
     }
 
     @Override
@@ -74,7 +63,7 @@ public final class PathPlannerPathfinder implements Pathfinder {
     public PathPlannerPath getCurrentPath(PathConstraints pathConstraints, GoalEndState goalEndState) {
         paramsChanged = false;
 
-        List<Translation2d> bezierPoints = environment.findPath(startPos, goalPos);
+        List<Translation2d> bezierPoints = env.findPath(startPos, goalPos);
 
         Translation2d[] logPath;
         if (bezierPoints == null) {

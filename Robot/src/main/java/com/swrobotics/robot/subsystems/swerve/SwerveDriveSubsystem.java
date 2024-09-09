@@ -111,7 +111,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
             moduleInputs[i] = new SwerveModuleIO.Inputs();
         }
 
-        this.kinematics = new SwerveKinematics(positions, Constants.kMaxAchievableSpeed);
+        this.kinematics = new SwerveKinematics(positions);
         this.estimator = new SwerveEstimator();
         this.setpointGenerator = new SwerveSetpointGenerator(positions);
 
@@ -243,7 +243,7 @@ public final class SwerveDriveSubsystem extends SubsystemBase {
                     limits, prevSetpoints, requestedSpeeds, Constants.kPeriodicTime);
             SwerveModuleState[] moduleSetpoints = setpoints.moduleStates;
             for (int i = 0; i < moduleIOs.length; i++) {
-                moduleIOs[i].apply(moduleSetpoints[i], currentDriveRequest.type);
+                moduleIOs[i].setTarget(moduleSetpoints[i], currentDriveRequest.type);
             }
             prevSetpoints = setpoints;
             Logger.recordOutput("Drive/Module Desired Setpoints", setpoints.desiredModuleStates);

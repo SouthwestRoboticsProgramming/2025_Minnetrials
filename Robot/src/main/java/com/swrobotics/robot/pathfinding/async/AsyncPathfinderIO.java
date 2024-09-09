@@ -11,17 +11,25 @@ import com.swrobotics.robot.pathfinding.PathEnvironment;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public interface AsyncPathfinderIO {
-    void requestPath(PathParams params);
+    /**
+     * Requests that a path should be found with the specified parameters.
+     *
+     * @param env environment to search within
+     * @param start position to start the search from (robot position)
+     * @param goal position to find a path to
+     */
+    void requestPath(PathEnvironment env, Translation2d start, Translation2d goal);
 
     void updateInputs(Inputs inputs);
-    
 
-    record PathParams(PathEnvironment env, Translation2d start, Translation2d goal) {}
-
+    // Not AutoLoggedInputs because path can be null
     final class Inputs implements LoggableInputs {
         private static final Translation2d[] EMPTY = {};
 
+        /** Whether the requested path has been calculated */
         public boolean pathReady = false;
+
+        /** The Bezier vertices of the calculated path */
         public List<Translation2d> path = null;
 
         @Override

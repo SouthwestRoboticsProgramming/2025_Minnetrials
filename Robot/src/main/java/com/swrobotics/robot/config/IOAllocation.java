@@ -2,6 +2,9 @@ package com.swrobotics.robot.config;
 
 import edu.wpi.first.wpilibj.RobotBase;
 
+/**
+ * Describes the IDs of the various devices within the robot.
+ */
 // For now, IDs are set such that this code can run on the 2024 robot
 public final class IOAllocation {
     public static final class CAN {
@@ -21,6 +24,7 @@ public final class IOAllocation {
         public static final int PWM_LEDS = 4;
     }
 
+    /** IDs of the devices within one swerve module */
     public static final class SwerveIDs {
         public final CanId drive, turn, encoder;
 
@@ -31,11 +35,15 @@ public final class IOAllocation {
         }
     }
 
+    /** Location of a CAN device. This includes both the ID and the CAN bus */
     public static final class CanId {
         public static int uniqueifyForSim(int id, String bus) {
             // CTRE sim doesn't support CANivore, so ids need to be globally unique
-            if (RobotBase.isSimulation() && bus.equals(CAN.GERALD))
+            if (RobotBase.isSimulation() && bus.equals(CAN.GERALD)) {
+                // If we somehow have more than 32 devices on the RoboRIO bus
+                // we have other problems
                 return id + 32;
+            }
 
             return id;
         }
