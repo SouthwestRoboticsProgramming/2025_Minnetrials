@@ -1,7 +1,6 @@
 package com.swrobotics.robot;
 
-import com.swrobotics.lib.ThreadUtils;
-
+import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.robot.logging.Logging;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj.Timer;
@@ -33,7 +32,7 @@ public final class Robot extends LoggedRobot {
     public void robotPeriodic() {
         Threads.setCurrentThreadPriority(true, 99);
 
-        ThreadUtils.runMainThreadOperations();
+        NTEntry.updateAll();
         CommandScheduler.getInstance().run(); // Leave this alone
     }
 

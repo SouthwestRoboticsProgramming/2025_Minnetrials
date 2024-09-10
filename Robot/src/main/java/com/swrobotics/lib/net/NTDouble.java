@@ -1,31 +1,30 @@
 package com.swrobotics.lib.net;
 
-/**
- * Represents a {@code double} value stored in NetworkTables.
- * @deprecated Not replayable in AdvantageKit
- */
-@Deprecated
-public final class NTDouble extends NTPrimitive<Double> {
-    private final double defaultVal;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import org.littletonrobotics.junction.LogTable;
 
-    /**
-     * Creates a new {@code double} entry with a specified path. The path can be split using the '/'
-     * character to organize entries into groups.
-     *
-     * @param path path
-     */
-    public NTDouble(String path, double defaultVal) {
-        super(path, defaultVal);
-        this.defaultVal = defaultVal;
+public final class NTDouble extends NTEntry<Double> {
+    public NTDouble(String path, double defaultValue) {
+        super(path, defaultValue);
     }
 
     @Override
-    public Double get() {
-        return entry.getDouble(defaultVal);
+    protected Double getValue(NetworkTableEntry entry, Double defaultValue) {
+        return entry.getDouble(defaultValue);
     }
 
     @Override
-    public void set(Double value) {
+    protected void setValue(NetworkTableEntry entry, Double value) {
         entry.setDouble(value);
+    }
+
+    @Override
+    protected void toLog(LogTable table, String key, Double value) {
+        table.put(key, value);
+    }
+
+    @Override
+    protected Double fromLog(LogTable table, String key, Double defaultValue) {
+        return table.get(key, defaultValue);
     }
 }
