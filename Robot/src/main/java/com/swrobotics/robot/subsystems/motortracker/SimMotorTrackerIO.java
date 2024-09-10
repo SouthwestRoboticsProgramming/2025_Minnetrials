@@ -1,4 +1,4 @@
-package com.swrobotics.robot.subsystems.temperature;
+package com.swrobotics.robot.subsystems.motortracker;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 
@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public final class SimTemperatureIO implements TemperatureIO {
+public final class SimMotorTrackerIO implements MotorTrackerIO {
     // We don't have anything physical to measure, just assume room temp
     private static final double TEMP = 22;
 

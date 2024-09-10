@@ -20,7 +20,7 @@ import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
-import com.swrobotics.robot.subsystems.temperature.TemperatureTrackerSubsystem;
+import com.swrobotics.robot.subsystems.motortracker.MotorTrackerSubsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.PowerDistribution;
@@ -45,7 +45,7 @@ public class RobotContainer {
     private final LoggedDashboardChooser<Double> autoDelaySelector;
 
     public final LoggedPowerDistribution pdp;
-    public final TemperatureTrackerSubsystem temperatureTracker;
+    public final MotorTrackerSubsystem motorTracker;
     public final SwerveDriveSubsystem drive;
     public final PathfindingTest pathfindingTest;
 
@@ -62,10 +62,10 @@ public class RobotContainer {
 
         // These must be initialized first
         music = new MusicSubsystem();
-        temperatureTracker = new TemperatureTrackerSubsystem();
+        motorTracker = new MotorTrackerSubsystem();
 
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
-        drive = new SwerveDriveSubsystem(temperatureTracker);
+        drive = new SwerveDriveSubsystem(motorTracker);
         lights = new LightsSubsystem(this);
 
         pathfindingTest = new PathfindingTest(drive);

@@ -1,4 +1,4 @@
-package com.swrobotics.robot.subsystems.temperature;
+package com.swrobotics.robot.subsystems.motortracker;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public final class RealTemperatureIO implements TemperatureIO {
+public final class RealMotorTrackerIO implements MotorTrackerIO {
     private record TrackedMotor(String name, String canBus, StatusSignal<Double> tempStatus) {}
 
     private final List<TrackedMotor> motors = new ArrayList<>();

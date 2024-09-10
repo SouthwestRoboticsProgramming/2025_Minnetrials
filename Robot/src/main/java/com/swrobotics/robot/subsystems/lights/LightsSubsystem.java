@@ -67,7 +67,7 @@ public final class LightsSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         boolean overCurrent = robot.pdp.getInputs().pdpTotalCurrent > Constants.kLedCurrentShutoffThreshold;
-        boolean overheating = robot.temperatureTracker.isOverheating();
+        boolean overheating = robot.motorTracker.isOverheating();
         boolean batteryLow = RobotController.getBatteryVoltage() < Constants.kLowBatteryThreshold;
 
         if (overCurrent) {

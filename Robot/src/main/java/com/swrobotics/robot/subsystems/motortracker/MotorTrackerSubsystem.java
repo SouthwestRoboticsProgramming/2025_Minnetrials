@@ -1,4 +1,4 @@
-package com.swrobotics.robot.subsystems.temperature;
+package com.swrobotics.robot.subsystems.motortracker;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.swrobotics.robot.config.Constants;
@@ -11,30 +11,31 @@ import org.littletonrobotics.junction.Logger;
  * Subsystem to track the temperature of all the motors in the robot to detect
  * if something is overheating.
  */
-public final class TemperatureTrackerSubsystem extends SubsystemBase {
-    private static TemperatureTrackerSubsystem instance = null;
+// TODO: Also track current draw
+public final class MotorTrackerSubsystem extends SubsystemBase {
+    private static MotorTrackerSubsystem instance = null;
 
-    public static TemperatureTrackerSubsystem getInstance() {
+    public static MotorTrackerSubsystem getInstance() {
         if (instance == null)
-            throw new IllegalStateException("TemperatureTrackerSubsystem is not yet initialized");
+            throw new IllegalStateException("MotorTrackerSubsystem is not yet initialized");
         return instance;
     }
 
-    private final TemperatureIO io;
-    private final TemperatureIO.Inputs inputs;
+    private final MotorTrackerIO io;
+    private final MotorTrackerIO.Inputs inputs;
     private final Timer periodicTimer;
     private boolean overheating;
 
-    public TemperatureTrackerSubsystem() {
+    public MotorTrackerSubsystem() {
         if (instance != null)
-            throw new IllegalStateException("TemperatureTrackerSubsystem already initialized");
+            throw new IllegalStateException("MotorTrackerSubsystem already initialized");
         instance = this;
 
         if (RobotBase.isReal())
-            io = new RealTemperatureIO();
+            io = new RealMotorTrackerIO();
         else
-            io = new SimTemperatureIO();
-        inputs = new TemperatureIO.Inputs();
+            io = new SimMotorTrackerIO();
+        inputs = new MotorTrackerIO.Inputs();
 
         periodicTimer = new Timer();
         periodicTimer.start();
