@@ -1,4 +1,4 @@
-package com.swrobotics.robot.pathfinding.async;
+package com.swrobotics.lib.pathfinding.async;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.pathfinding.Pathfinder;
 import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.logging.Logging;
-import com.swrobotics.robot.pathfinding.PathEnvironment;
+import com.swrobotics.lib.pathfinding.PathEnvironment;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.geometry.Translation2d;

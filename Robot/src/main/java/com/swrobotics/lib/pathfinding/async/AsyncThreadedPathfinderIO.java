@@ -1,9 +1,9 @@
-package com.swrobotics.robot.pathfinding.async;
+package com.swrobotics.lib.pathfinding.async;
 
 import java.util.List;
 import java.util.Objects;
 
-import com.swrobotics.robot.pathfinding.PathEnvironment;
+import com.swrobotics.lib.pathfinding.PathEnvironment;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public final class AsyncThreadedPathfinderIO implements AsyncPathfinderIO {

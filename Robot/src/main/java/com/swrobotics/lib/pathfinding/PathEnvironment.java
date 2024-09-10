@@ -1,4 +1,4 @@
-package com.swrobotics.robot.pathfinding;
+package com.swrobotics.lib.pathfinding;
 
 import edu.wpi.first.math.geometry.Translation2d;
 

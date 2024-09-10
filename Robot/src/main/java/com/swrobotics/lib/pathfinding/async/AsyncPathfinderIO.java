@@ -1,4 +1,4 @@
-package com.swrobotics.robot.pathfinding.async;
+package com.swrobotics.lib.pathfinding.async;
 
 import java.util.Arrays;
 import java.util.List;
@@ -6,7 +6,7 @@ import java.util.List;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-import com.swrobotics.robot.pathfinding.PathEnvironment;
+import com.swrobotics.lib.pathfinding.PathEnvironment;
 
 import edu.wpi.first.math.geometry.Translation2d;
 

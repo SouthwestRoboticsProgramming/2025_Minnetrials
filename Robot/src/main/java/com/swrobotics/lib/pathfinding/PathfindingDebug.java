@@ -1,4 +1,4 @@
-package com.swrobotics.robot.pathfinding;
+package com.swrobotics.lib.pathfinding;
 
 import com.swrobotics.lib.utils.DoubleInput;
 import com.swrobotics.lib.utils.MathUtil;
@@ -52,7 +52,6 @@ public final class PathfindingDebug {
 
         public EnvPolygon(DoubleInput in) {
             internalRegion = new Triangle[(int) in.next()];
-            System.out.println("Region has " + internalRegion.length);
             for (int i = 0; i < internalRegion.length; i++) {
                 internalRegion[i] = new Triangle(in);
             }

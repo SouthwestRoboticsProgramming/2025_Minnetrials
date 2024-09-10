@@ -4,7 +4,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
 import com.swrobotics.robot.config.Constants;
 import com.swrobotics.robot.logging.FieldView;
-import com.swrobotics.robot.pathfinding.*;
+import com.swrobotics.lib.pathfinding.*;
 import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
