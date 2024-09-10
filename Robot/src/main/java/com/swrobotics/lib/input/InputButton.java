@@ -11,107 +11,141 @@ import java.util.function.Supplier;
 /** Represents a binary input (pressed or not pressed). */
 public final class InputButton implements InputElement {
     private final Supplier<Boolean> getter;
-    private final List<Runnable> onRising, onFalling;
-    private boolean pressed, wasPressed;
+    private final List<Runnable> onPressed, onReleased;
+    private boolean down, wasDown;
 
     /**
-     * Creates a new input button that reads its value from a provided getter function.
+     * Creates a new input button that reads its value from a provided getter
+     * function.
      *
      * @param getter value getter
      */
     public InputButton(Supplier<Boolean> getter) {
         this.getter = getter;
 
-        onRising = new ArrayList<>();
-        onFalling = new ArrayList<>();
+        onPressed = new ArrayList<>();
+        onReleased = new ArrayList<>();
 
-        pressed = wasPressed = getter.get();
+        down = wasDown = getter.get();
     }
 
     /**
-     * Gets whether this button is currently pressed.
-     *
-     * @return pressed
+     * @return whether this button is currently pressed
      */
-    public boolean isPressed() {
-        return pressed;
+    public boolean isDown() {
+        return down;
     }
 
     /**
-     * Gets whether this button was just pressed during this periodic cycle. This is when the button
-     * was pressed the previous periodic, but is now pressed.
-     *
-     * @return if button was just released
-     */
-    public boolean isRising() {
-        return pressed && !wasPressed;
-    }
-
-    /**
-     * Gets whether this button was just released during this periodic cycle. This is when the
-     * button was not pressed the previous periodic, but is now pressed.
+     * Gets whether this button was just pressed during this periodic cycle.
+     * This is when the button was not down the previous periodic, but is now
+     * down.
      *
      * @return if button was just pressed
      */
-    public boolean isFalling() {
-        return !pressed && wasPressed;
+    public boolean wasPressed() {
+        return down && !wasDown;
     }
 
     /**
-     * Adds a function that will be called whenever the button is pressed. This function will be
-     * invoked on each periodic where {@link #isRising()} returns {@code true}.
+     * Gets whether this button was just released during this periodic cycle.
+     * This is when the button was down the previous periodic, but is now not
+     * down.
      *
-     * @param risingFn function to call
-     * @return this
+     * @return if button was just pressed
      */
-    public InputButton onRising(Runnable risingFn) {
-        onRising.add(risingFn);
-        return this;
+    public boolean wasReleased() {
+        return !down && wasDown;
     }
 
-    public InputButton onRising(Command command) {
-        onRising(() -> CommandScheduler.getInstance().schedule(command));
+    /**
+     * Adds a function that will be called whenever the button is pressed. This
+     * function will be invoked on each periodic where {@link #wasPressed()}
+     * returns {@code true}.
+     *
+     * @param pressedFn function to call
+     * @return this
+     */
+    public InputButton onPressed(Runnable pressedFn) {
+        onPressed.add(pressedFn);
         return this;
     }
 
     /**
-     * Adds a function that will be called whenever the button is release. This function will be
-     * invoked on each periodic where {@link #isFalling()} returns {@code true}.
+     * Adds a command that will be called whenever the button is pressed. This
+     * command will be scheduled on each periodic where {@link #wasPressed()}
+     * returns {@code true}.
      *
-     * @param fallingFn function to call
+     * @param command command to schedule
      * @return this
      */
-    public InputButton onFalling(Runnable fallingFn) {
-        onFalling.add(fallingFn);
+    public InputButton onPressed(Command command) {
+        onPressed(() -> CommandScheduler.getInstance().schedule(command));
         return this;
     }
 
-    public InputButton onFalling(Command command) {
-        onFalling(() -> CommandScheduler.getInstance().schedule(command));
+    /**
+     * Adds a function that will be called whenever the button is released.
+     * This function will be invoked on each periodic where
+     * {@link #wasReleased()} returns {@code true}.
+     *
+     * @param releasedFn function to call
+     * @return this
+     */
+    public InputButton onReleased(Runnable releasedFn) {
+        onReleased.add(releasedFn);
         return this;
     }
 
+    /**
+     * Adds a command that will be called whenever the button is released. This
+     * command will be scheduled on each periodic where {@link #wasReleased()}
+     * returns {@code true}.
+     *
+     * @param command command to schedule
+     * @return this
+     */
+    public InputButton onReleased(Command command) {
+        onReleased(() -> CommandScheduler.getInstance().schedule(command));
+        return this;
+    }
+
+    /**
+     * Adds a command that will be called whenever the button is held down for
+     * a specified amount of time.
+     *
+     * @param command command to schedule
+     * @param seconds time the button has to be held
+     * @return this
+     */
     public InputButton onHeld(Command command, double seconds) {
-        new Trigger(this::isPressed).debounce(seconds).onTrue(command);
+        new Trigger(this::isDown).debounce(seconds).onTrue(command);
         return this;
     }
 
+    /**
+     * Adds a command that will be called whenever the button is held down for
+     * one second.
+     *
+     * @param command command to schedule
+     * @return this
+     */
     public InputButton onHeld(Command command) {
         return onHeld(command, 1.0);
     }
 
     @Override
     public void update() {
-        wasPressed = pressed;
-        pressed = getter.get();
-        if (isRising()) {
-            for (Runnable risingFn : onRising) {
-                risingFn.run();
+        wasDown = down;
+        down = getter.get();
+        if (wasPressed()) {
+            for (Runnable pressedFn : onPressed) {
+                pressedFn.run();
             }
         }
-        if (isFalling()) {
-            for (Runnable fallingFn : onFalling) {
-                fallingFn.run();
+        if (wasReleased()) {
+            for (Runnable releasedFn : onReleased) {
+                releasedFn.run();
             }
         }
     }

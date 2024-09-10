@@ -52,11 +52,11 @@ public final class ControlBoard extends SubsystemBase {
         operator = new XboxController(Constants.kOperatorControllerPort, Constants.kDeadband);
 
         // Gyro reset buttons
-        driver.start.onFalling(() -> robot.drive.setRotation(new Rotation2d()));
-        driver.back.onFalling(() -> robot.drive.setRotation(new Rotation2d())); // Two buttons to reset gyro so the driver can't get confused
+        driver.start.onReleased(() -> robot.drive.setRotation(new Rotation2d()));
+        driver.back.onReleased(() -> robot.drive.setRotation(new Rotation2d())); // Two buttons to reset gyro so the driver can't get confused
 
         // Test LEDs
-        driver.a.onRising(LightCommands.blink(robot.lights, Color.kCyan));
+        driver.a.onPressed(LightCommands.blink(robot.lights, Color.kCyan));
         driver.a.onHeld(LightCommands.blink(robot.lights, Color.kYellow));
 
         // Endgame Alert
@@ -68,13 +68,13 @@ public final class ControlBoard extends SubsystemBase {
         .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75)
                 .alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
 
-        driver.b.onRising(RumblePatternCommands.endgameAlert(driver, 0.75));
+        driver.b.onPressed(RumblePatternCommands.endgameAlert(driver, 0.75));
 
         driveFilter = new DriveAccelFilter(Constants.kDriveControlMaxAccel);
 
         new Trigger(CHARACTERISE_WHEEL_RADIUS::get).whileTrue(new CharacterizeWheelsCommand(robot.drive));
 
-        driver.x.onRising(Commands.defer(robot.pathfindingTest::getFollowCommand, Collections.emptySet()));
+        driver.x.onPressed(Commands.defer(robot.pathfindingTest::getFollowCommand, Collections.emptySet()));
     }
 
     /**

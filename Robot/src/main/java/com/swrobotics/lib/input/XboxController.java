@@ -14,6 +14,7 @@ public final class XboxController extends InputSource {
     private final List<InputElement> elements;
     private final double deadband;
 
+    // All the inputs on the Xbox controller
     public final InputButton a, b, x, y;
     public final InputButton back, start;
     public final InputButton leftStickButton, rightStickButton;
@@ -21,13 +22,15 @@ public final class XboxController extends InputSource {
     public final InputAxis leftStickX, leftStickY;
     public final InputAxis rightStickX, rightStickY;
     public final InputAxis leftTrigger, rightTrigger;
-
     public final InputDpad dpad;
 
     /**
      * Creates a new Xbox controller connected to a given port.
      *
      * @param port port the controller is on
+     * @param deadband deadband range to apply to all analog inputs. If you
+     *                 want the raw, undeadbanded input you can use
+     *                 {@link InputAxis#getRaw()}
      */
     public XboxController(int port, double deadband) {
         xbox = new edu.wpi.first.wpilibj.XboxController(port);
@@ -84,14 +87,26 @@ public final class XboxController extends InputSource {
         xbox.setRumble(GenericHID.RumbleType.kRightRumble, amount);
     }
 
+    /**
+     * Sets the rumble feedback output of the controller.
+     *
+     * @param type type of rumble to set
+     * @param amount percentage of rumble from 0 to 1
+     */
     public void setRumble(RumbleType type, double amount) {
         xbox.setRumble(type, amount);
     }
 
+    /**
+     * @return left analog stick input as a vector
+     */
     public Translation2d getLeftStick() {
         return MathUtil.deadband2d(leftStickX.getRaw(), leftStickY.getRaw(), deadband);
     }
 
+    /**
+     * @return right analog stick input as a vector
+     */
     public Translation2d getRightStick() {
         return MathUtil.deadband2d(rightStickX.getRaw(), rightStickY.getRaw(), deadband);
     }

@@ -43,6 +43,10 @@ public final class InputAxis implements InputElement {
         return value;
     }
 
+    /**
+     * @param range range to check, centered around 0
+     * @return whether the current position is outside of the range
+     */
     public boolean isOutside(double range) {
         return Math.abs(value) > range;
     }
