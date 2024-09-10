@@ -29,6 +29,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+/**
+ * The container for all of the robot's subsystems. This is separate from
+ * {@link Robot} so that we can use a constructor for initialization instead of
+ * {@code robotInit()}, which allows us to have final fields for subsystems.
+ */
 public class RobotContainer {
     // Whether to simulate the robot or replay a log file
     public static final Logging.SimMode SIM_MODE = Logging.SimMode.SIMULATE;
@@ -76,6 +81,7 @@ public class RobotContainer {
         autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
         autoSelector = new LoggedDashboardChooser<>("Auto Selector");
         autoSelector.addDefaultOption("None", Commands.none());
+        autoSelector.addOption("Test", Commands.print("Test worked!"));
         for (AutoEntry auto : autos)
             autoSelector.addOption(auto.name(), auto.cmd());
 

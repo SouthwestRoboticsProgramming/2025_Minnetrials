@@ -3,21 +3,16 @@ package com.swrobotics.robot;
 import com.swrobotics.lib.net.NTEntry;
 import com.swrobotics.robot.logging.Logging;
 import edu.wpi.first.wpilibj.Threads;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import org.littletonrobotics.junction.LoggedRobot;
 
 /**
  * The main robot class.
  */
-// TODO: Merge with RobotContainer??
 public final class Robot extends LoggedRobot {
     private Command autonomousCommand;
-    private final Timer autonomousTimer = new Timer();
-    private double autonomousDelay;
-    private boolean hasScheduledAuto;
-
     private RobotContainer robotContainer;
 
     @Override
@@ -44,24 +39,22 @@ public final class Robot extends LoggedRobot {
             System.out.println("Canceled the current auto command");
         }
 
-        // Get autonomous from selector
-        autonomousCommand = robotContainer.getAutonomousCommand();
-
-        autonomousDelay = robotContainer.getAutoDelay();
-        autonomousTimer.restart();
-        hasScheduledAuto = false;
-
-        robotContainer.drive.setEstimatorIgnoreVision(true);
-    }
-
-    @Override
-    public void autonomousPeriodic() {
-        // Manually time auto delay since using sequential group causes crash
-        // when running the same auto twice
-        if (!hasScheduledAuto && autonomousCommand != null && autonomousTimer.hasElapsed(autonomousDelay)) {
-            autonomousCommand.schedule();
-            hasScheduledAuto = true;
+        // Start autonomous command
+        Command auto = robotContainer.getAutonomousCommand();
+        double delay = robotContainer.getAutoDelay();
+        if (delay > 0) {
+            autonomousCommand = Commands.sequence(
+                    Commands.waitSeconds(delay),
+                    // Use a proxy here so that running the same auto twice
+                    // does not crash the robot code. Directly adding it to the
+                    // sequence would mark the auto command as composed,
+                    // causing the second time to throw an exception
+                    Commands.deferredProxy(() -> auto)
+            );
+        } else {
+            autonomousCommand = auto;
         }
+        autonomousCommand.schedule();
     }
 
     @Override
@@ -84,6 +77,7 @@ public final class Robot extends LoggedRobot {
     // Override these so WPILib doesn't print unhelpful warnings
     @Override public void simulationPeriodic() {}
     @Override public void disabledPeriodic() {}
+    @Override public void autonomousPeriodic() {}
     @Override public void teleopPeriodic() {}
     @Override public void testPeriodic() {}
 }
