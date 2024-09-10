@@ -52,6 +52,7 @@ public final class PathfindingDebug {
 
         public EnvPolygon(DoubleInput in) {
             internalRegion = new Triangle[(int) in.next()];
+            System.out.println("Region has " + internalRegion.length);
             for (int i = 0; i < internalRegion.length; i++) {
                 internalRegion[i] = new Triangle(in);
             }
@@ -120,7 +121,7 @@ public final class PathfindingDebug {
 
         for (EnvPolygon poly : envPolygons) {
             for (Triangle tri : poly.internalRegion) {
-                g.plotLines(List.of(tri.v1, tri.v2, tri.v3), Color.kBlue);
+                g.plotLines(List.of(tri.v1, tri.v2, tri.v3, tri.v1), Color.kBlue);
             }
         }
 
