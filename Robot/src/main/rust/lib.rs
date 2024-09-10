@@ -18,7 +18,7 @@ fn obstacles_from_handle<'a>(handle: jlong) -> &'a mut Vec<pathfinding::Obstacle
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_newObstacleList<
+pub extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_newObstacleList<
     'local,
 >(
     _env: JNIEnv<'local>,
@@ -28,7 +28,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_newO
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_addCircle<'local>(
+pub extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_addCircle<'local>(
     _env: JNIEnv<'local>,
     _class: JClass<'local>,
     obs_handle: jlong,
@@ -45,7 +45,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_addC
 }
 
 #[no_mangle]
-pub unsafe extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_addPolygon<
+pub unsafe extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_addPolygon<
     'local,
 >(
     mut env: JNIEnv<'local>,
@@ -71,7 +71,7 @@ pub unsafe extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJ
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_buildEnvironment<
+pub extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_buildEnvironment<
     'local,
 >(
     _env: JNIEnv<'local>,
@@ -85,7 +85,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_buil
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_findPath<'local>(
+pub extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_findPath<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     env_handle: jlong,
@@ -123,7 +123,7 @@ pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_find
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_swrobotics_robot_pathfinding_PathfindingJNI_getDebugData<'local>(
+pub extern "system" fn Java_com_swrobotics_lib_pathfinding_PathfindingJNI_getDebugData<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     env_handle: jlong,

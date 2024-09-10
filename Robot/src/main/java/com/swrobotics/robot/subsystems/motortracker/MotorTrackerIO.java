@@ -7,6 +7,8 @@ public interface MotorTrackerIO {
     final class Inputs extends AutoLoggedInputs {
         public String[] names = new String[0];
         public double[] temperatures = new double[0];
+        public double[] supplyCurrents = new double[0];
+        public double[] statorCurrents = new double[0];
     }
 
     void updateInputs(Inputs inputs);

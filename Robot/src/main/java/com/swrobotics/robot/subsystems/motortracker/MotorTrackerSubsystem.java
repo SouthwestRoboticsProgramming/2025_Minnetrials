@@ -11,7 +11,6 @@ import org.littletonrobotics.junction.Logger;
  * Subsystem to track the temperature of all the motors in the robot to detect
  * if something is overheating.
  */
-// TODO: Also track current draw
 public final class MotorTrackerSubsystem extends SubsystemBase {
     private static MotorTrackerSubsystem instance = null;
 
@@ -60,7 +59,7 @@ public final class MotorTrackerSubsystem extends SubsystemBase {
             return;
 
         io.updateInputs(inputs);
-        Logger.processInputs("Temperatures", inputs);
+        Logger.processInputs("Motor Status", inputs);
 
         overheating = false;
         for (double temp : inputs.temperatures) {
