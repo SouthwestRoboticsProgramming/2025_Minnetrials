@@ -1,16 +1,12 @@
 package com.swrobotics.lib.net;
 
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEntry;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -23,6 +19,7 @@ import java.util.function.Supplier;
 public abstract class NTEntry<T> implements Supplier<T> {
     private static final String PREFIX = "NTEntry";
     private static final List<NTEntry<?>> ALL_ENTRIES = new ArrayList<>();
+    private static boolean persistentCleaned = false;
 
     /**
      * Updates all NTEntries. Should be called once per periodic.
@@ -31,6 +28,47 @@ public abstract class NTEntry<T> implements Supplier<T> {
         for (NTEntry<?> entry : ALL_ENTRIES) {
             entry.update();
         }
+    }
+
+    /**
+     * Removes any unused persistent values left over in NetworkTables. This
+     * should be called after all persistent NTEntries have been created.
+     */
+    public static void cleanPersistent() {
+        // Find the names of the persistent values the code uses
+        Set<String> expected = new HashSet<>();
+        for (NTEntry<?> entry : ALL_ENTRIES) {
+            if (entry.entry.isPersistent()) {
+                expected.add(entry.entry.getName());
+            }
+        }
+
+        // Delete values we don't use
+        Topic[] allTopics = NetworkTableInstance.getDefault().getTopics();
+        for (Topic topic : allTopics) {
+            String name = topic.getName();
+            if (topic.isPersistent() && !expected.contains(name)) {
+                String value;
+                try (GenericSubscriber sub = topic.genericSubscribe()) {
+                    value = Objects.toString(sub.get().getValue());
+                }
+
+                // Provide several ways of getting the value back if it was
+                // deleted unintentionally
+                Logger.recordOutput("NTEntry/Deleted" + name, value);
+                DriverStation.reportWarning("NTEntry: Deleted " + name + " (value was `" + value + "`)", false);
+
+                // Keep it around until robot or code is restarted
+                topic.setRetained(true);
+
+                // Remove the value
+                topic.setPersistent(false);
+            }
+        }
+
+        // Record that we've done this so we can detect if an entry is created
+        // after this was called, to prevent values from being wrongly deleted
+        persistentCleaned = true;
     }
 
     private final NetworkTableEntry entry;
@@ -109,8 +147,16 @@ public abstract class NTEntry<T> implements Supplier<T> {
      * somewhere safe.
      *
      * @return this
+     * @throws IllegalStateException if called after {@link #cleanPersistent()}
+     *      was called
      */
     public NTEntry<T> setPersistent() {
+        if (persistentCleaned) {
+            throw new IllegalStateException("Persistent values have already "
+                    + "been cleaned, so this value would have been deleted! "
+                    + "Define persistent values in Constants.");
+        }
+
         entry.setPersistent();
 
         if (!Objects.equals(defaultValue, get()))

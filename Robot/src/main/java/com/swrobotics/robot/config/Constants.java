@@ -15,8 +15,6 @@ import edu.wpi.first.math.util.Units;
 
 // Use NTEntry when you want tunable
 // Use double when value has been tuned in so it can't accidentally change
-// TODO: We might want to come up with a different solution than persistent values
-//  since persistent values never go away
 public final class Constants {
     public static final int kPeriodicFreq = 50; // Hz
     public static final double kPeriodicTime = 1.0 / kPeriodicFreq;
@@ -32,7 +30,7 @@ public final class Constants {
     public static final double kDeadband = 0.15;
     public static final double kTriggerThreshold = 0.3;
 
-    public static final double kDriveControlMaxAccel = 5000.5; // m/s^2
+    public static final double kDriveControlMaxAccel = 5.5; // m/s^2
     public static final double kDriveControlMaxTurnSpeed = 1; // rot/s
     public static final double kDriveControlDrivePower = 2; // Exponent input is raised to
     public static final double kDriveControlTurnPower = 2;
@@ -129,4 +127,9 @@ public final class Constants {
     // Temperature
     public static final double kTemperatureInterval = 2; // Seconds
     public static final double kOverheatingThreshold = 75; // Celsius
+
+    // This must be at the bottom of the file so it happens last
+    static {
+        NTEntry.cleanPersistent();
+    }
 }
