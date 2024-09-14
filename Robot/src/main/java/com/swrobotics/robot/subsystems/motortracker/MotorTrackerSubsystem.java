@@ -55,7 +55,7 @@ public final class MotorTrackerSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         // Only sample temperature every so often
-        if (!periodicTimer.advanceIfElapsed(Constants.kTemperatureInterval))
+        if (!periodicTimer.advanceIfElapsed(Constants.kMotorTrackInterval))
             return;
 
         io.updateInputs(inputs);

@@ -126,7 +126,7 @@ public final class Constants {
     public static final int kLowBatteryThreshold = 10; // Volts
     public static final int kLedCurrentShutoffThreshold = 250; // Amps
 
-    // Temperature
-    public static final double kTemperatureInterval = 2; // Seconds
+    // Motor tracking
+    public static final double kMotorTrackInterval = 2; // Seconds
     public static final double kOverheatingThreshold = 75; // Celsius
 }
