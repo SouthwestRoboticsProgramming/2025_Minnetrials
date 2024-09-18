@@ -1,5 +1,7 @@
 package com.swrobotics.robot.config;
 
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -65,6 +67,14 @@ public final class IOAllocation {
                 return CAN.RIO;
 
             return bus;
+        }
+
+        public TalonFX createTalonFX() {
+            return new TalonFX(id, bus);
+        }
+
+        public CANcoder createCANcoder() {
+            return new CANcoder(id, bus);
         }
     }
 }
