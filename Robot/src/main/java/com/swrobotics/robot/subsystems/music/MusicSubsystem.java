@@ -19,7 +19,7 @@ public final class MusicSubsystem extends SubsystemBase {
      * @return the instance of the music subsystem
      */
     public static MusicSubsystem getInstance() {
-        if (instance != null)
+        if (instance == null)
             throw new IllegalStateException("Music subsystem has not been initialized yet!");
         return instance;
     }
