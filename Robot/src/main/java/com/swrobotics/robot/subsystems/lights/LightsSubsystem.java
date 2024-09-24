@@ -108,51 +108,54 @@ public final class LightsSubsystem extends SubsystemBase {
         );
     }
 
-    private static final record StripeBoundary(float position, Stripe toRight) {}
-
     // Scroll speed is seconds per full pass through the pattern
-    // TODO: optimize this
     public void applyStripes(float scrollSpeed, Stripe... stripes) {
+        float scroll;
+        Color wrapColor;
+        if (scrollSpeed == 0) {
+            scroll = 0;
+            wrapColor = stripes[stripes.length - 1].color;
+        } else {
+            scroll = (float) (Timer.getFPGATimestamp() / scrollSpeed) % 1;
+            wrapColor = stripes[0].color;
+        }
+
         float totalWeight = 0;
         for (Stripe stripe : stripes)
             totalWeight += stripe.weight;
 
-        float scroll = scrollSpeed == 0 ? 0 : (float) Timer.getFPGATimestamp() / scrollSpeed;
+        float weightPerPixel = totalWeight / Constants.kLedStripLength;
 
-        // Pattern is sampled at pixel's left edge
-        List<StripeBoundary> boundaries = new ArrayList<>();
-        float weightSoFar = 0;
-        for (Stripe stripe : stripes) {
-            float leftEdgePos = (float) MathUtil.floorMod(weightSoFar / totalWeight + scroll, 1) * Constants.kLedStripLength;
-            boundaries.add(new StripeBoundary(leftEdgePos, stripe));
-            weightSoFar += stripe.weight;
-        }
-        boundaries.sort(Comparator.comparingDouble(StripeBoundary::position));
+        float position = (1 - scroll) * totalWeight;
+        for (int i = 0; i < Constants.kLedStripLength; i++) {
+            position += weightPerPixel;
+            position %= totalWeight;
 
-        for (int pixel = 0; pixel < Constants.kLedStripLength; pixel++) {
-            StripeBoundary before = null, after = null;
-            for (StripeBoundary boundary : boundaries) {
-                if (boundary.position > pixel) {
-                    after = boundary;
-                    break;
+            Color color = null;
+            Color nextColor = wrapColor;
+            float acc = 0;
+            for (Stripe stripe : stripes) {
+                float end = acc + stripe.weight;
+                if (end > position) {
+                    if (color != null) {
+                        nextColor = stripe.color;
+                        break;
+                    }
+                    color = stripe.color;
                 }
-                before = boundary;
+                acc = end;
             }
 
-            if (before == null)
-                before = boundaries.get(boundaries.size() - 1);
-            if (after == null) {
-                data.setLED(pixel, before.toRight.color);
-                continue;
-            }
+            // Shouldn't happen, but fallback just in case
+            if (color == null)
+                color = Color.kBlack;
 
-            if (pixel == (int) after.position) {
-                float percent = 1 - (after.position % 1);
-                data.setLED(pixel, interpolate(before.toRight.color, after.toRight.color, percent));
-                continue;
-            }
-
-            data.setLED(pixel, before.toRight.color);
+            float diff = acc - position;
+            float pixelsToEnd = diff / weightPerPixel;
+            if (pixelsToEnd > 1)
+                data.setLED(i, color);
+            else
+                data.setLED(i, interpolate(color, nextColor, 1 - pixelsToEnd));
         }
 
         leds.setData(data);
