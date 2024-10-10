@@ -10,7 +10,10 @@ public final class NavXGyroIO implements GyroIO {
     private final AHRS navx;
 
     public NavXGyroIO() {
-        navx = new AHRS(SPI.Port.kMXP);
+	// Explicitly set the NavX update rate, workaround for NavX vendordep issue
+	// See https://www.chiefdelphi.com/t/navx2-disconnecting-reconnecting-intermittently-not-browning-out/425487
+	byte updateRate = (byte) 50;
+        navx = new AHRS(SPI.Port.kMXP, updateRate);
     }
 
     @Override
