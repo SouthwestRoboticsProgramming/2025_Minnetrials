@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import com.swrobotics.robot.subsystems.PathfindingTest;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -19,7 +18,6 @@ import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.logging.Logging;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
-import com.swrobotics.robot.subsystems.swerve.SwerveDriveSubsystem;
 import com.swrobotics.robot.subsystems.motortracker.MotorTrackerSubsystem;
 
 import edu.wpi.first.wpilibj.DriverStation;
@@ -46,11 +44,9 @@ public class RobotContainer {
 
     public final LoggedPowerDistribution pdp;
     public final MotorTrackerSubsystem motorTracker;
-    public final SwerveDriveSubsystem drive;
-    public final PathfindingTest pathfindingTest;
-
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
+    // Add more subsystems here
 
     public final ControlBoard controlboard;
 
@@ -65,10 +61,7 @@ public class RobotContainer {
         motorTracker = new MotorTrackerSubsystem();
 
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
-        drive = new SwerveDriveSubsystem(motorTracker);
         lights = new LightsSubsystem(this);
-
-        pathfindingTest = new PathfindingTest(drive);
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);
@@ -103,10 +96,10 @@ public class RobotContainer {
     private static final record AutoEntry(String name, Command cmd) {}
 
     private static List<AutoEntry> buildPathPlannerAutos() {
-        if (!AutoBuilder.isConfigured()) {
-            throw new RuntimeException(
-                    "AutoBuilder was not configured before attempting to build an auto chooser");
-        }
+//        if (!AutoBuilder.isConfigured()) {
+//            throw new RuntimeException(
+//                    "AutoBuilder was not configured before attempting to build an auto chooser");
+//        }
 
         List<String> autoNames = AutoBuilder.getAllAutoNames();
         autoNames.sort(String.CASE_INSENSITIVE_ORDER);

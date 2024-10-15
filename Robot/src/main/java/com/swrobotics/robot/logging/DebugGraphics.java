@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * VERY inefficient way to draw arbitrary lines to a Mechanism2d. Should only
- * be used in simulation.
+ * be used in simulation, and only rarely because it lags the dashboard.
  */
 public final class DebugGraphics {
     private final Mechanism2d mechanism;

@@ -29,7 +29,7 @@ import java.util.TreeMap;
  * Uses vision estimates and odometry measurements to estimate the robot's pose
  * on the field.
  */
-public final class SwerveEstimator {
+public final class PoseEstimator {
     private final AprilTagEnvironment environment;
     private final List<VisionSource> visionSources;
 
@@ -39,7 +39,7 @@ public final class SwerveEstimator {
 
     private boolean ignoreVision;
 
-    public SwerveEstimator() {
+    public PoseEstimator() {
         // Load AprilTag environment from JSON file
         try {
             environment = AprilTagEnvironment.load(Constants.kAprilTagJson);

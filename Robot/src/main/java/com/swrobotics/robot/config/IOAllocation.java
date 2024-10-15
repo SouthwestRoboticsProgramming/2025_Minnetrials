@@ -13,28 +13,11 @@ public final class IOAllocation {
         private static final String RIO = "";
         public static final String GERALD = "Gerald";
 
-        // All on Gerald
-        public static final SwerveIDs SWERVE_FL = new SwerveIDs(9, 5, 1);
-        public static final SwerveIDs SWERVE_FR = new SwerveIDs(10, 6, 2);
-        public static final SwerveIDs SWERVE_BL = new SwerveIDs(11, 7, 3);
-        public static final SwerveIDs SWERVE_BR = new SwerveIDs(12, 8, 4);
-
         public static final CanId PDP = new CanId(62, RIO);
     }
 
     public static final class RIO {
         public static final int PWM_LEDS = 4;
-    }
-
-    /** IDs of the devices within one swerve module */
-    public static final class SwerveIDs {
-        public final CanId drive, turn, encoder;
-
-        public SwerveIDs(int drive, int turn, int encoder) {
-            this.drive = new CanId(drive, CAN.GERALD);
-            this.turn = new CanId(turn, CAN.GERALD);
-            this.encoder = new CanId(encoder, CAN.GERALD);
-        }
     }
 
     /** Location of a CAN device. This includes both the ID and the CAN bus */

@@ -31,13 +31,13 @@ public final class PrideSequencer {
             createFlag("fcf431,ffffff,9d59d2,000000", 2), // Nonbinary
             createFlag("3da542,a7d379,ffffff,a9a9a9,000000", 2), // Aromantic
             createFlag("078d70,26ceaa,98e8c1,ffffff,7bade2,5049cc,3d1a78", 2), // Gay
+            createFlag("fe218b,fed700,21b0fe", 2), // Pansexual
+            createFlag("fa4288,ffffff,71197f,000000,071195", 2), // Genderfluid
 
             createFlag("000000,bcc6c7,ffffff,a6fa6e,ffffff,bcc6c7,000000"), // Agender
-            createFlag("fa4288,ffffff,71197f,000000,071195"), // Genderfluid
             createFlag("d42c00,fd9855,ffffff,d161a2,a20161"), // Lesbian
             createFlag("b57edc,ffffff,4a8122"), // Bigender
             createFlag("ffffff*4,7e287f,a3a3a3*4"), // Demisexual
-            createFlag("fe218b,fed700,21b0fe"), // Pansexual
     };
 
     private static Flag createFlag(String colors) { return createFlag(colors, 1); }

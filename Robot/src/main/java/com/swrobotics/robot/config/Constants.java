@@ -1,17 +1,9 @@
 package com.swrobotics.robot.config;
 
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.ClosedLoopOutputType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants.SteerFeedbackType;
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 import com.swrobotics.lib.field.FieldInfo;
-import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
-import com.swrobotics.robot.subsystems.swerve.SwerveKinematicLimits;
-import com.swrobotics.robot.subsystems.swerve.SwerveModuleInfo;
 import com.swrobotics.robot.subsystems.vision.RawAprilTagSource;
 import com.swrobotics.robot.subsystems.vision.tagtracker.TagTrackerCaptureProperties;
-import edu.wpi.first.math.util.Units;
 
 // Use NTEntry when you want tunable
 // Use double when value has been tuned in so it can't accidentally change
@@ -29,62 +21,6 @@ public final class Constants {
 
     public static final double kDeadband = 0.15;
     public static final double kTriggerThreshold = 0.3;
-
-    public static final double kDriveControlMaxAccel = 5.5; // m/s^2
-    public static final double kDriveControlMaxTurnSpeed = 1; // rot/s
-    public static final double kDriveControlDrivePower = 2; // Exponent input is raised to
-    public static final double kDriveControlTurnPower = 2;
-
-    // Auto (TODO: Tune)
-    public static final double kAutoDriveKp = 8;
-    public static final double kAutoDriveKd = 0;
-
-    public static final NTEntry<Double> kAutoTurnKp = new NTDouble("Auto/Turn PID/kP", 9).setPersistent();
-    public static final NTEntry<Double> kAutoTurnKd = new NTDouble("Auto/Turn PID/kD", 0.5).setPersistent();
-
-    // Drive
-    private static final double kHalfSpacingX = 55.3 / 100 / 2; // m
-    private static final double kHalfSpacingY = 63.0 / 100 / 2; // m
-
-    public static final NTEntry<Double> kFrontLeftOffset = new NTDouble("Drive/Modules/Front Left Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kFrontRightOffset = new NTDouble("Drive/Modules/Front Right Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kBackLeftOffset = new NTDouble("Drive/Modules/Back Left Offset (rot)", 0).setPersistent();
-    public static final NTEntry<Double> kBackRightOffset = new NTDouble("Drive/Modules/Back Right Offset (rot)", 0).setPersistent();
-    public static final SwerveModuleInfo[] kSwerveModuleInfos = {
-            new SwerveModuleInfo(IOAllocation.CAN.SWERVE_FL, kHalfSpacingX, kHalfSpacingY, Constants.kFrontLeftOffset, "Front Left"),
-            new SwerveModuleInfo(IOAllocation.CAN.SWERVE_FR, kHalfSpacingX, -kHalfSpacingY, Constants.kFrontRightOffset, "Front Right"),
-            new SwerveModuleInfo(IOAllocation.CAN.SWERVE_BL, -kHalfSpacingX, kHalfSpacingY, Constants.kBackLeftOffset, "Back Left"),
-            new SwerveModuleInfo(IOAllocation.CAN.SWERVE_BR, -kHalfSpacingX, -kHalfSpacingY, Constants.kBackRightOffset, "Back Right")
-    };
-
-    public static final double kDriveRadius = Math.hypot(kHalfSpacingX, kHalfSpacingY);
-    public static final double kMaxAchievableSpeed = Units.feetToMeters(18.9); // m/s  TODO: Measure
-
-    public static final double kDriveDriftComp = kPeriodicTime * 2; // dt for chassis speeds discretize  TODO: Tune
-
-    public static final double kDriveCurrentLimit = 40; // A
-    public static final double kDriveCurrentLimitTime = 0.25; // sec
-
-    public static final SwerveKinematicLimits kDriveLimits = new SwerveKinematicLimits();
-    static {
-        kDriveLimits.kMaxDriveVelocity = kMaxAchievableSpeed;
-        kDriveLimits.kMaxDriveAcceleration = kDriveLimits.kMaxDriveVelocity / 0.1;
-        kDriveLimits.kMaxSteeringVelocity = Math.toRadians(1500);
-    }
-
-    public static final SwerveModuleConstantsFactory kSwerveConstantsFactory = new SwerveModuleConstantsFactory()
-            .withDriveMotorGearRatio((50.0/16) * (16.0/28) * (45.0/15))
-            .withSteerMotorGearRatio(150.0 / 7)
-            .withWheelRadius(1.9) // Inches
-            .withSlipCurrent(300) // A  TODO Tune
-            .withSteerMotorGains(new Slot0Configs().withKP(100).withKD(0.05))
-            .withDriveMotorGains(new Slot0Configs().withKP(3).withKD(0))
-            .withSteerMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-            .withDriveMotorClosedLoopOutput(ClosedLoopOutputType.Voltage)
-            .withSpeedAt12VoltsMps(kMaxAchievableSpeed)
-            .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
-            .withCouplingGearRatio(50.0 / 16)
-            .withSteerMotorInverted(true);
 
     // Pathfinding
     public static final String kPathfindingJson = "crescendo_pathfinding.json";
