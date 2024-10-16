@@ -27,6 +27,11 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 
+import com.swrobotics.robot.config.Constants;
+import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
+
 /**
  * The container for all of the robot's subsystems. This is separate from
  * {@link Robot} so that we can use a constructor for initialization instead of
@@ -70,13 +75,14 @@ public class RobotContainer {
         NamedCommands.registerCommand("Example Named Command", Commands.print("The command ran!"));
 
         // Create a chooser to select the autonomous
-        List<AutoEntry> autos = buildPathPlannerAutos();
-        autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
         autoSelector = new LoggedDashboardChooser<>("Auto Selector");
         autoSelector.addDefaultOption("None", Commands.none());
         autoSelector.addOption("Test", Commands.print("Test worked!"));
-        for (AutoEntry auto : autos)
-            autoSelector.addOption(auto.name(), auto.cmd());
+
+//        List<AutoEntry> autos = buildPathPlannerAutos();
+//        autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
+//        for (AutoEntry auto : autos)
+//            autoSelector.addOption(auto.name(), auto.cmd());
 
         // Create a selector to select delay before running auto
         autoDelaySelector = new LoggedDashboardChooser<>("Auto Delay");
@@ -96,10 +102,10 @@ public class RobotContainer {
     private static final record AutoEntry(String name, Command cmd) {}
 
     private static List<AutoEntry> buildPathPlannerAutos() {
-//        if (!AutoBuilder.isConfigured()) {
-//            throw new RuntimeException(
-//                    "AutoBuilder was not configured before attempting to build an auto chooser");
-//        }
+        if (!AutoBuilder.isConfigured()) {
+            throw new RuntimeException(
+                    "AutoBuilder was not configured before attempting to build an auto chooser");
+        }
 
         List<String> autoNames = AutoBuilder.getAllAutoNames();
         autoNames.sort(String.CASE_INSENSITIVE_ORDER);

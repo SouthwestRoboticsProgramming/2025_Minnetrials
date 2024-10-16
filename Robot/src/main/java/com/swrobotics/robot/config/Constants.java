@@ -12,8 +12,8 @@ public final class Constants {
     public static final double kPeriodicTime = 1.0 / kPeriodicFreq;
 
     // We don't know what the 2025 field is yet :(
-    public static final FieldInfo kField = FieldInfo.CRESCENDO_2024;
-    public static final int kEndgameAlertTime = 15;
+    public static final FieldInfo kField = FieldInfo.MINNETRIALS_BEACH_BASH_2025;
+    public static final int kEndgameAlertTime = 30;
 
     // Controls
     public static final int kDriverControllerPort = 0;
@@ -28,7 +28,7 @@ public final class Constants {
     public static final double kPathfindingTolerance = 0.2; // m
 
     // Vision
-    public static final String kAprilTagJson = "crescendo_apriltag.json";
+    public static final String kAprilTagJson = "beach_bash_apriltag.json";
 
     // These need to be tuned during field calibration time at every event.
     // They can be adjusted manually in NetworkTables at TagTracker/<Camera>/Config/...

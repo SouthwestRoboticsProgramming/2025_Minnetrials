@@ -3,6 +3,7 @@ package com.swrobotics.lib.field;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 
 /** Represents the information related to the layout of the game field. */
@@ -14,6 +15,11 @@ public final class FieldInfo {
     /** Information for the 2024 Crescendo field */
     public static final FieldInfo CRESCENDO_2024 =
             new FieldInfo(16.541, 8.211, FieldSymmetry.LATERAL);
+
+    /** Information for the 2025 Minnetrials Beach Bash field */
+    // The field symmetry system doesn't work for this field... all the quadrants are different
+    public static final FieldInfo MINNETRIALS_BEACH_BASH_2025 =
+            new FieldInfo(Units.inchesToMeters(357), Units.inchesToMeters(321), FieldSymmetry.LATERAL);
 
     public static DriverStation.Alliance getAlliance() {
         return DriverStation.getAlliance().orElse(null);
