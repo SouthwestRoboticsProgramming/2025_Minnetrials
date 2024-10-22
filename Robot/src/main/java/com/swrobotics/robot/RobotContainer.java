@@ -2,7 +2,6 @@ package com.swrobotics.robot;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
@@ -26,11 +25,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-
-import com.swrobotics.robot.config.Constants;
-import com.swrobotics.robot.subsystems.vision.AprilTagEnvironment;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 
 /**
  * The container for all of the robot's subsystems. This is separate from
@@ -79,11 +73,6 @@ public class RobotContainer {
         autoSelector.addDefaultOption("None", Commands.none());
         autoSelector.addOption("Test", Commands.print("Test worked!"));
 
-//        List<AutoEntry> autos = buildPathPlannerAutos();
-//        autos.sort(Comparator.comparing(AutoEntry::name, String.CASE_INSENSITIVE_ORDER));
-//        for (AutoEntry auto : autos)
-//            autoSelector.addOption(auto.name(), auto.cmd());
-
         // Create a selector to select delay before running auto
         autoDelaySelector = new LoggedDashboardChooser<>("Auto Delay");
         autoDelaySelector.addDefaultOption("None", 0.0);
@@ -97,31 +86,6 @@ public class RobotContainer {
         // Play startup song
         CommandScheduler.getInstance().schedule(musicCommand = Commands.waitSeconds(5)
                 .andThen(new PlaySongCommand(music, "music" + File.separator + "xp.chrp")));
-    }
-
-    private static final record AutoEntry(String name, Command cmd) {}
-
-    private static List<AutoEntry> buildPathPlannerAutos() {
-        if (!AutoBuilder.isConfigured()) {
-            throw new RuntimeException(
-                    "AutoBuilder was not configured before attempting to build an auto chooser");
-        }
-
-        List<String> autoNames = AutoBuilder.getAllAutoNames();
-        autoNames.sort(String.CASE_INSENSITIVE_ORDER);
-
-        List<PathPlannerAuto> options = new ArrayList<>();
-        for (String autoName : autoNames) {
-            PathPlannerAuto auto = new PathPlannerAuto(autoName);
-
-            options.add(auto);
-        }
-
-        List<AutoEntry> entries = new ArrayList<>();
-        for (PathPlannerAuto auto : options)
-            entries.add(new AutoEntry(auto.getName(), auto));
-
-        return entries;
     }
 
     public void disabledInit() {

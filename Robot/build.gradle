@@ -72,27 +72,6 @@ task(checkAkitInstall, dependsOn: "classes", type: JavaExec) {
 }
 compileJava.finalizedBy checkAkitInstall
 
-task buildPathfindingRoborioRelease(type: Exec) {
-    commandLine 'cross', 'build', '--release', '--target', 'arm-unknown-linux-gnueabi'
-}
-// TODO: Figure out how to make DeployUtils deploy the compiled binary "properly"
-//  For now just copy the binary into deploy folder so it gets deployed as a resource
-task copyPathfindingRoborioReleaseToDeploy(type: Copy) {
-    from file('target/arm-unknown-linux-gnueabi/release/libpathfinding_jni.so')
-    into file('src/main/deploy')
-    dependsOn buildPathfindingRoborioRelease
-}
-task buildPathfindingSimDebug(type: Exec) {
-    commandLine 'cargo', 'build'
-}
-task buildPathfindingSimRelease(type: Exec) {
-    commandLine 'cargo', 'build', '--release'
-}
-
-deployfrcStaticFileDeployroborio.dependsOn(copyPathfindingRoborioReleaseToDeploy)
-simulateJavaDebug.dependsOn(buildPathfindingSimDebug)
-simulateJavaRelease.dependsOn(buildPathfindingSimRelease)
-
 def deployArtifact = deploy.targets.roborio.artifacts.frcJava
 
 // Set to true to use debug for JNI.
