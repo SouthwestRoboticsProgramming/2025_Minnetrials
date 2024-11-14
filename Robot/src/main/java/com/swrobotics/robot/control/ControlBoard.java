@@ -49,6 +49,40 @@ public final class ControlBoard extends SubsystemBase {
             return;
         }
 
+        /*
+         * when pressed forward normally it goes 0.5 of full speed until b is
+         * pressed to make it go beeg fast
+         * 
+         * if b is pressed, go beeg fast
+         * if b is not pressed, go 0.5 of full speed
+         */
+
+        // give input to controler 
+        double driveForward = driver.leftStickY.get();
+        double driveTurn = driver.leftStickX.get();
+
+        boolean speedButton = driver.b.isDown();
+
+        
+        driveForward = Math.copySign(Math.pow(driveForward, 2), driveForward);
+        driveTurn = Math.copySign(Math.pow(driveTurn, 2), driveTurn);
+
+        driveTurn *= .5;
+        
+        // if (speedButton) {
+        //     robot.drive.move(driveForward, driveTurn);
+        // }
+        // else {
+        //     robot.drive.move(driveForward/2, ); 
+        // }
+
+        if (!speedButton) {
+            driveForward /= 2; // Go half the speed
+        }
+
+        robot.drive.move(driveForward, driveTurn);
+
+
         // TODO: Put teleop control logic here
     }
 }

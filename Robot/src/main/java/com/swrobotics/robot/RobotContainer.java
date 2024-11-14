@@ -15,6 +15,7 @@ import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.control.ControlBoard;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.logging.Logging;
+import com.swrobotics.robot.subsystems.DriveBase;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
 import com.swrobotics.robot.subsystems.motortracker.MotorTrackerSubsystem;
@@ -46,6 +47,7 @@ public class RobotContainer {
     public final LightsSubsystem lights;
     public final MusicSubsystem music;
     // Add more subsystems here
+    public final DriveBase drive;
 
     public final ControlBoard controlboard;
 
@@ -61,6 +63,9 @@ public class RobotContainer {
 
         pdp = LoggedPowerDistribution.getInstance(IOAllocation.CAN.PDP.id(), PowerDistribution.ModuleType.kRev);
         lights = new LightsSubsystem(this);
+
+        drive = new DriveBase();
+        
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);
