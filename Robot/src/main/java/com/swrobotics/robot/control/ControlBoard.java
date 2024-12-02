@@ -63,7 +63,7 @@ public final class ControlBoard extends SubsystemBase {
 
         boolean speedButton = driver.b.isDown();
 
-        
+        //give speed controll based on joysick strength
         driveForward = Math.copySign(Math.pow(driveForward, 2), driveForward);
         driveTurn = Math.copySign(Math.pow(driveTurn, 2), driveTurn);
 
@@ -79,10 +79,13 @@ public final class ControlBoard extends SubsystemBase {
         if (!speedButton) {
             driveForward /= 2; // Go half the speed
         }
-
+        
+        //robot moves
         robot.drive.move(driveForward, driveTurn);
 
 
         // TODO: Put teleop control logic here
+
+        
     }
 }
