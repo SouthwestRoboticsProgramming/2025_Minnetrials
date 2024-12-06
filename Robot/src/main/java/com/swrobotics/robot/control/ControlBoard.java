@@ -5,6 +5,7 @@ import com.swrobotics.robot.RobotContainer;
 import com.swrobotics.robot.commands.RumblePatternCommands;
 import com.swrobotics.robot.config.Constants;
 
+import com.swrobotics.robot.subsystems.Intake;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -83,7 +84,7 @@ public final class ControlBoard extends SubsystemBase {
         driveForward = Math.copySign(Math.pow(driveForward, 2), driveForward);
         driveTurn = Math.copySign(Math.pow(driveTurn, 2), driveTurn);
 
-        driveTurn *= .5;
+        driveTurn *= 0.35;
         
         // if (speedButton) {
         //     robot.drive.move(driveForward, driveTurn);
@@ -103,23 +104,27 @@ public final class ControlBoard extends SubsystemBase {
         
         if (intaking) { 
             // intake button pressed
-            robot.intake.move(Constants.kIntakeSpeed.get(), Constants.kIntakeSpeed.get()); 
+            robot.intake.setState(Intake.State.INTAKE);
+//            robot.intake.move(Constants.kIntakeSpeed.get(), Constants.kIntakeSpeed.get());
         } else { 
             // intake button not pressed
             if (shoot) {
                 // shoot button pressed
-                robot.intake.move(-Constants.kIntakeEjectSpeedTop.get(), -Constants.kIntakeEjectSpeedBottom.get());
+                robot.intake.setState(Intake.State.EJECT);
+//                robot.intake.move(-Constants.kIntakeEjectSpeedTop.get(), -Constants.kIntakeEjectSpeedBottom.get());
             } else {
-                robot.intake.move(-Constants.kIntakeIdleSpeed.get(), -Constants.kIntakeIdleSpeed.get());
+                robot.intake.setState(Intake.State.OFF);
+//                robot.intake.move(-Constants.kIntakeIdleSpeed.get(), -Constants.kIntakeIdleSpeed.get());
 
             }
         } 
 
                 if (armUp) {
-
-                    robot.arm.set(Constants.kArmUpAngle.get());
+                        robot.arm.set(true);
+//                    robot.arm.set(Constants.kArmUpAngle.get());
                 } else {
-                    robot.arm.set(Constants.kArmDownAngle.get());
+                    robot.arm.set(false);
+//                    robot.arm.set(Constants.kArmDownAngle.get());
                 }
 
         

@@ -8,6 +8,8 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.swrobotics.robot.config.Constants;
 
+import com.swrobotics.robot.subsystems.motortracker.MotorTrackerSubsystem;
+import com.swrobotics.robot.subsystems.music.MusicSubsystem;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -38,6 +40,9 @@ public class Arm extends SubsystemBase {
 
         // Tell motor controller where the arm is initially
         motor.setPosition(0.0);
+
+        MotorTrackerSubsystem.getInstance().addMotor("Arm", motor);
+        MusicSubsystem.getInstance().addInstrument(motor);
     }
 
     // Update the motor PID configuration with the values from the driver station
@@ -53,7 +58,14 @@ public class Arm extends SubsystemBase {
         motor.getConfigurator().apply(config);
     }
 
-    public void set(double angleDeg) {
+    public void set(boolean up) {
+        double angleDeg;
+        if (up) {
+            angleDeg = Constants.kArmUpAngle.get();
+        } else {
+            angleDeg = Constants.kArmDownAngle.get();
+        }
+
         // Convert units from degrees to rotations
         double angleRotations = Units.degreesToRotations(angleDeg);
 

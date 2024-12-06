@@ -2,6 +2,7 @@ package com.swrobotics.robot;
 
 import java.io.File;
 
+import com.swrobotics.robot.commands.Autonomous;
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -75,7 +76,8 @@ public class RobotContainer {
 
         // Create a chooser to select the autonomous
         autoSelector = new LoggedDashboardChooser<>("Auto Selector");
-        autoSelector.addDefaultOption("None", Commands.none());
+        autoSelector.addDefaultOption("Auto", Autonomous.createAutoSequence(this));
+        autoSelector.addOption("None", Commands.none());
         autoSelector.addOption("Test", Commands.print("Test worked!"));
 
         // Create a selector to select delay before running auto
