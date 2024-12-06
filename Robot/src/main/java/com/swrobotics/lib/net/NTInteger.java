@@ -7,7 +7,7 @@ import org.littletonrobotics.junction.LogTable;
  * An integer value stored in NetworkTables. Actually stored as a double, since
  * integer entries are somewhat broken.
  */
-// TODO: Actually store as integer entry once WPILib fixes integer entries
+
 public final class NTInteger extends NTEntry<Integer> {
     public NTInteger(String path, int defaultValue) {
         super(path, defaultValue);

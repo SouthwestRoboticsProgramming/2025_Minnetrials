@@ -1,21 +1,19 @@
 package com.swrobotics.robot;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.littletonrobotics.junction.inputs.LoggedPowerDistribution;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
-import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.swrobotics.robot.commands.PlaySongCommand;
 import com.swrobotics.robot.config.IOAllocation;
 import com.swrobotics.robot.control.ControlBoard;
 import com.swrobotics.robot.logging.FieldView;
 import com.swrobotics.robot.logging.Logging;
+import com.swrobotics.robot.subsystems.Arm;
 import com.swrobotics.robot.subsystems.DriveBase;
+import com.swrobotics.robot.subsystems.Intake;
 import com.swrobotics.robot.subsystems.lights.LightsSubsystem;
 import com.swrobotics.robot.subsystems.music.MusicSubsystem;
 import com.swrobotics.robot.subsystems.motortracker.MotorTrackerSubsystem;
@@ -48,7 +46,8 @@ public class RobotContainer {
     public final MusicSubsystem music;
     // Add more subsystems here
     public final DriveBase drive;
-
+    public final Intake intake;
+    public final Arm arm;
     public final ControlBoard controlboard;
 
     private Command musicCommand;
@@ -65,7 +64,8 @@ public class RobotContainer {
         lights = new LightsSubsystem(this);
 
         drive = new DriveBase();
-        
+        arm = new Arm();
+        intake = new Intake();
 
         // ControlBoard must be initialized last
         controlboard = new ControlBoard(this);

@@ -23,18 +23,17 @@ public final class Logging {
 
     public static void initialize(SimMode simMode) {
         if (RobotBase.isReal()) {
-            // TODO: Figure out writing to USB
+
 //            Logger.addDataReceiver(new WPILOGWriter());
             Logger.addDataReceiver(new NT4Publisher());
         } else if (simMode == SimMode.SIMULATE) {
             Logger.addDataReceiver(new NT4Publisher());
-        } else if (simMode == SimMode.SIMULATE_AND_LOG) {
-            String path = "logs";
+        } else if (simMode == SimMode.SIMULATE_AND_LOG) { 
+
             Logger.addDataReceiver(new NT4Publisher());
             Logger.addDataReceiver(new WPILOGWriter());
             // Logger.addDataReceiver(new WPILOGWriter(LogFileUtil.addPathSuffix(path, "_sim")));
         } else {
-            // FIXME: findReplayLog() does not work
             String path = LogFileUtil.findReplayLog();
             Logger.setReplaySource(new WPILOGReader(path));
             Logger.addDataReceiver(new NT4Publisher());

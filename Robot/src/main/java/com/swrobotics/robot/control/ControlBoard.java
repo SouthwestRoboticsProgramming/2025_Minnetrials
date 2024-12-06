@@ -6,6 +6,7 @@ import com.swrobotics.robot.commands.RumblePatternCommands;
 import com.swrobotics.robot.config.Constants;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -19,12 +20,14 @@ public final class ControlBoard extends SubsystemBase {
      * Operator:
      * nothing!
      *
-     * TODO: Describe the controls here for easy reference
+     * 
      */
 
     private final RobotContainer robot;
     public final XboxController driver;
     public final XboxController operator;
+
+    private boolean intaking = false;
 
     public ControlBoard(RobotContainer robot) {
         this.robot = robot;
@@ -41,6 +44,16 @@ public final class ControlBoard extends SubsystemBase {
                     && DriverStation.getMatchTime() <= Constants.kEndgameAlertTime)
         .onTrue(RumblePatternCommands.endgameAlert(driver, 0.75)
                 .alongWith(RumblePatternCommands.endgameAlert(operator, 0.75)));
+    
+        // Map intake to A button
+        new Trigger(operator.a::isDown)
+            .onTrue(Commands.runOnce(() -> intaking = true))
+            .onFalse(Commands.runOnce(() -> intaking = false));
+
+        // Disable intake when piece detected
+        new Trigger(robot.intake::hasPiece)
+            .debounce(0.3)
+            .onTrue(Commands.runOnce(() -> intaking = false));
     }
 
     @Override
@@ -58,10 +71,13 @@ public final class ControlBoard extends SubsystemBase {
          */
 
         // give input to controler 
-        double driveForward = driver.leftStickY.get();
-        double driveTurn = driver.leftStickX.get();
-
+        double driveForward = -driver.leftStickY.get();
+        double driveTurn = driver.rightStickX.get();
         boolean speedButton = driver.b.isDown();
+
+        // boolean intake = operator.a.isDown();
+        boolean armUp = operator.leftTrigger.isOutside(Constants.kTriggerThreshold);
+        boolean shoot = operator.rightTrigger.isOutside(Constants.kTriggerThreshold);
 
         //give speed controll based on joysick strength
         driveForward = Math.copySign(Math.pow(driveForward, 2), driveForward);
@@ -83,9 +99,30 @@ public final class ControlBoard extends SubsystemBase {
         //robot moves
         robot.drive.move(driveForward, driveTurn);
 
+        //give controler imput
+        
+        if (intaking) { 
+            // intake button pressed
+            robot.intake.move(Constants.kIntakeSpeed.get(), Constants.kIntakeSpeed.get()); 
+        } else { 
+            // intake button not pressed
+            if (shoot) {
+                // shoot button pressed
+                robot.intake.move(-Constants.kIntakeEjectSpeedTop.get(), -Constants.kIntakeEjectSpeedBottom.get());
+            } else {
+                robot.intake.move(-Constants.kIntakeIdleSpeed.get(), -Constants.kIntakeIdleSpeed.get());
 
-        // TODO: Put teleop control logic here
+            }
+        } 
 
+                if (armUp) {
+
+                    robot.arm.set(Constants.kArmUpAngle.get());
+                } else {
+                    robot.arm.set(Constants.kArmDownAngle.get());
+                }
+
+        
         
     }
 }

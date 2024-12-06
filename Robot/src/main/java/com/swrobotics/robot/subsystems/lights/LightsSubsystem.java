@@ -43,7 +43,7 @@ public final class LightsSubsystem extends SubsystemBase {
         applySolid(Timer.getFPGATimestamp() % 0.4 > 0.2 ? Color.kOrange : Color.kBlack);
     }
 
-    private void showAutoDriving() {
+    public void showAutoDriving() {
         // Rainbow
         applyStripes(5f,
                 new Stripe(Color.kRed, 1),

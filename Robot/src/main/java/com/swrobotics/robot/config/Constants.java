@@ -1,6 +1,7 @@
 package com.swrobotics.robot.config;
 
 import com.swrobotics.lib.field.FieldInfo;
+import com.swrobotics.lib.net.NTDouble;
 import com.swrobotics.lib.net.NTEntry;
 
 // Use NTEntry when you want tunable
@@ -19,6 +20,21 @@ public final class Constants {
 
     public static final double kDeadband = 0.15;
     public static final double kTriggerThreshold = 0.3;
+
+
+    public static final NTEntry<Double> kArmKP = new NTDouble("Arm/kP", 30).setPersistent();
+    public static final NTEntry<Double> kArmKD = new NTDouble("Arm/kD", 0).setPersistent();
+    public static final NTEntry<Double> kArmKG = new NTDouble("Arm/kG", 0).setPersistent();
+
+    public static final NTEntry<Double> kArmUpAngle = new NTDouble("Arm/Up Angle", 60).setPersistent();
+    public static final NTEntry<Double> kArmDownAngle = new NTDouble("Arm/Down Angle", 4).setPersistent();
+
+    public static final NTEntry<Double> kIntakeSpeed = new NTDouble("Intake/Intake Speed", 0.2).setPersistent();
+    public static final NTEntry<Double> kIntakeEjectSpeedTop = new NTDouble("Intake/Eject Speed (Top)", -0.1).setPersistent();
+    public static final NTEntry<Double> kIntakeEjectSpeedBottom = new NTDouble("Intake/Eject Speed (Bottom)", 1.0).setPersistent();
+    public static final NTEntry<Double> kIntakeIdleSpeed = new NTDouble("Intake/Idle Speed", -0.02).setPersistent();
+    public static final NTEntry<Double> kIntakeStopCurrent = new NTDouble("Intake/Stop Current", 10).setPersistent();
+
 
     // Lights
     public static final int kLedStripLength = 22;
