@@ -16,12 +16,13 @@ public final class ControlBoard extends SubsystemBase {
      * Control mapping:
      *
      * Driver:
-     * nothing!
+     * Left stick: forward/backward drive
+     * Right stick: turn
      *
      * Operator:
-     * nothing!
-     *
-     * 
+     * A: intake
+     * Left trigger: arm up
+     * Right trigger: eject
      */
 
     private final RobotContainer robot;
