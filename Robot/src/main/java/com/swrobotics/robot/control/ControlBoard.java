@@ -75,7 +75,7 @@ public final class ControlBoard extends SubsystemBase {
         // give input to controler 
         double driveForward = -driver.leftStickY.get();
         double driveTurn = driver.rightStickX.get();
-        boolean speedButton = driver.b.isDown();
+        boolean speedButton = false;//driver.b.isDown();
 
         // boolean intake = operator.a.isDown();
         boolean armUp = operator.leftTrigger.isOutside(Constants.kTriggerThreshold);
